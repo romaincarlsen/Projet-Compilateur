@@ -169,7 +169,7 @@ void declConst() : {}
 void defConst() : {}
 {
 	
-  <ident>  	  	
+  (<ident>){IdentArray.add(TokenManager.identLu)}
    "=" valConst()
     
 }

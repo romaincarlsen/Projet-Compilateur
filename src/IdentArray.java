@@ -1,18 +1,19 @@
 
+import java.util.HashMap;
 import java.util.LinkedList;
 
 public class IdentArray {   
 
 
 		// Tableau des identfiants
-		private LinkedList<Ident> identArray;
+		public static HashMap<String, Ident> identArray;
 
 		
 		/**
 		 *  Constructeur d'un identifiant
 		 */
 		public IdentArray() {
-			identArray = new LinkedList<Ident>();
+			identArray = new HashMap<String, Ident>();
 		}
 		
 		
@@ -35,8 +36,8 @@ public class IdentArray {
 		/**
 		 *  Ajout d'un identifiant
 		 */
-		public void add(String s, Ident i) {
-
+		public static void add(String s) {
+			identArray.put(s, new Ident());
 		}
 		
 		
