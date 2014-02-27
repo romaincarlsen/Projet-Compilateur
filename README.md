@@ -1,7 +1,7 @@
-Projet Compilateur
+Projet Compilo
 =============
 
-Compilo : Projet Eclipse, INSA Rennes
+Projet Compilateur pour Eclipse, INSA Rennes
 
 
 Instructions pour installer le dépot en local
