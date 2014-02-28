@@ -1,7 +1,7 @@
 
 public class Declaration {   
 	
-		private Ident.Type type;
+		private String type;
 		private String identName;
 	 
 		/**

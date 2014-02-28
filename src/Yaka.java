@@ -28,6 +28,7 @@ public class Yaka implements YakaConstants {
                         analyseur = new Yaka(input);
                         analyseur.analyse();
                         System.out.println("analyse syntaxique reussie!");
+                        System.out.println(IdentArray.print());
                 }
                 catch (ParseException e) {
                         String msg = e.getMessage();
@@ -103,23 +104,40 @@ public class Yaka implements YakaConstants {
 
   static final public void defConst() throws ParseException {
     jj_consume_token(ident);
+                             IdentArray.lastIdent = YakaTokenManager.identLu;
     jj_consume_token(42);
     valConst();
+     IdentArray.add(IdentArray.lastIdent, new IdConst(IdentArray.lastValue, IdentArray.lastType));
   }
 
   static final public void valConst() throws ParseException {
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case entier:
       jj_consume_token(entier);
+          IdentArray.lastValue = YakaTokenManager.entierLu;
+          IdentArray.lastType = YakaConstants.tokenImage[ENTIER];
       break;
     case ident:
       jj_consume_token(ident);
+         IdConst i = (IdConst) IdentArray.get(YakaTokenManager.identLu);
+         if(i != null) {
+                 IdentArray.lastValue = i.value;
+                 IdentArray.lastType = i.type;
+         }
+         else {
+                 TokenMgrError error = new TokenMgrError("Error : "+YakaTokenManager.identLu+" ident not found", TokenMgrError.LEXICAL_ERROR);
+                 System.err.println(error.getMessage());
+         }
       break;
     case VRAI:
       jj_consume_token(VRAI);
+         IdentArray.lastValue = YakaConstants.tokenImage[VRAI];
+         IdentArray.lastType = YakaConstants.tokenImage[BOOLEEN];
       break;
     case FAUX:
       jj_consume_token(FAUX);
+         IdentArray.lastValue = YakaConstants.tokenImage[FAUX];
+         IdentArray.lastType = YakaConstants.tokenImage[BOOLEEN];
       break;
     default:
       jj_la1[3] = jj_gen;
@@ -132,6 +150,8 @@ public class Yaka implements YakaConstants {
     jj_consume_token(VAR);
     type();
     jj_consume_token(ident);
+          IdentArray.shiftOffset();
+          IdentArray.add(YakaTokenManager.identLu, new IdVar(IdentArray.currentOffset, IdentArray.lastType));
     label_4:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -144,6 +164,8 @@ public class Yaka implements YakaConstants {
       }
       jj_consume_token(40);
       jj_consume_token(ident);
+                  IdentArray.shiftOffset();
+                  IdentArray.add(YakaTokenManager.identLu, new IdVar(IdentArray.currentOffset, IdentArray.lastType));
     }
     jj_consume_token(41);
   }
@@ -152,9 +174,11 @@ public class Yaka implements YakaConstants {
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case ENTIER:
       jj_consume_token(ENTIER);
+               IdentArray.lastType = YakaConstants.tokenImage[ENTIER];
       break;
     case BOOLEEN:
       jj_consume_token(BOOLEEN);
+                IdentArray.lastType = YakaConstants.tokenImage[BOOLEEN];
       break;
     default:
       jj_la1[5] = jj_gen;

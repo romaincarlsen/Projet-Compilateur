@@ -1,11 +1,8 @@
 
-public class Ident {
-
-		// Types possibles pour un Ident : VARIABLE ou CONSTANTE
-		public static enum Type {VARIABLE, CONSTANTE};
+public abstract class Ident {
 		
-		// Type de l'Iden
-		private Type type;
+		// Type de l'Ident
+		public String type;
 
 		
 		/**
@@ -14,6 +11,12 @@ public class Ident {
 		public Ident() {
 			
 		}
+
+
+		/**
+		 *  Retourne un identifiant sous forme de chaine
+		 */
+		public abstract String toString();
 
 }
 

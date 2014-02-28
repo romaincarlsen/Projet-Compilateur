@@ -938,15 +938,15 @@ static void TokenLexicalActions(Token matchedToken)
    {
       case 36 :
         image.append(input_stream.GetSuffix(jjimageLen + (lengthOfMatch = jjmatchedPos + 1)));
-          entierLu = Integer.parseInt(image.toString());
+         entierLu = Integer.parseInt(image.toString());
          break;
       case 38 :
         image.append(input_stream.GetSuffix(jjimageLen + (lengthOfMatch = jjmatchedPos + 1)));
-         identLu =image.toString();
+         identLu = image.toString();
          break;
       case 39 :
         image.append(input_stream.GetSuffix(jjimageLen + (lengthOfMatch = jjmatchedPos + 1)));
-          chaineLue = image.toString();
+         chaineLue = image.toString();
          break;
       default :
          break;
