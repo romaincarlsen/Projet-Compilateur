@@ -19,7 +19,6 @@ PARSER_BEGIN(Yaka)
 
 public class Yaka {
 
-
 	public static void main(String args[]) {
 		Yaka analyseur;
 		java.io.InputStream input;
@@ -46,7 +45,8 @@ public class Yaka {
 			analyseur = new Yaka(input);
 			analyseur.analyse();
 			System.out.println("analyse syntaxique reussie!");
-			System.out.println(IdentArray.print());
+			System.out.println(IdentArray.inString());
+			System.out.println(Expression.inString()) ;
 		}
 		catch (ParseException e) {
 			String msg = e.getMessage();
@@ -97,7 +97,20 @@ SKIP :
 
 TOKEN :
 {
-  < BOOLEEN: "BOOLEEN" >
+	<PLUS : "+">
+| 	<MOINS : "-">
+|	<MUL : "*">
+|	<DIV : "/">
+|	<INF : "<">
+|	<SUP : ">">
+|	<INFEGAL : "<=">
+|	<SUPEGAL : ">=">
+|	<EGAL : "=">
+|	<DIFF : "<>">
+| 	<ET : "ET">
+|	<OU : "OU">
+| 	<NON : "NON">
+|  < BOOLEEN: "BOOLEEN" >
 | < VAR: "VAR" >
 | < FAIRE: "FAIRE" >
 | < SINON: "SINON" >
@@ -111,9 +124,6 @@ TOKEN :
 | <CONST : "CONST">
 | <FAUX : "FAUX">
 | <FAIT : "FAIT">
-| <OU : "OU">
-| <ET : "ET">
-| <NON : "NON">
 | <FONCTION : "FONCTION">
 | <FFONCTION  : "FFONCTION">
 | <PROGRAMME : "PROGRAMME" >
@@ -273,40 +283,40 @@ void primaire (): {}
 }
 
 void valeur () : {}
-{ <entier> 		
- | <ident> 		
- | <VRAI> 		
- | <FAUX> 		
+{ <entier>	{Expression.addType("\"ENTIER\"");}
+ | <ident> 	{Expression.addType(IdentArray.get(YakaTokenManager.identLu).type);}
+ | <VRAI> 	{Expression.addType("\"BOOLEEN\"");}	
+ | <FAUX> 	{Expression.addType("\"BOOLEEN\"");}
  
 }
 
 void opRel() : {}
 {
-   "=" 		
- | "<>" 	
- | "<" 		
- | "<=" 	
- | ">" 		
- | ">=" 	
+   <EGAL> 	{Expression.addOperator(YakaConstants.tokenImage[EGAL]) ;}		
+ | <DIFF> 	{Expression.addOperator(YakaConstants.tokenImage[DIFF]) ;}	
+ | <INF>	{Expression.addOperator(YakaConstants.tokenImage[INF]) ;}		
+ | <INFEGAL>	{Expression.addOperator(YakaConstants.tokenImage[INFEGAL]) ;}	
+ | <SUP> 	{Expression.addOperator(YakaConstants.tokenImage[SUP]) ;}	
+ | <SUPEGAL>	{Expression.addOperator(YakaConstants.tokenImage[SUPEGAL]) ;}	
 } 
 
 void opAdd() : {}
 {
-    "+"		
-  |  "-"  
-  | <OU> 	
+    <PLUS>	{Expression.addOperator(YakaConstants.tokenImage[PLUS]) ;}	
+  |  <MOINS>  	{Expression.addOperator(YakaConstants.tokenImage[MOINS]) ;}	
+  | <OU> 	{Expression.addOperator(YakaConstants.tokenImage[OU]) ;}	
 }
 
 void opMul() : {}
 {
-  "*"		
-  | "/"		
-  | <ET>	
+  <MUL>		{Expression.addOperator(YakaConstants.tokenImage[MUL]) ;}	
+  | <DIV>	{Expression.addOperator(YakaConstants.tokenImage[DIV]) ;}	
+  | <ET>	{Expression.addOperator(YakaConstants.tokenImage[ET]) ;}		
 } 
 
 void opNeg() : {}
-{ "-" 		
- | <NON>	
+{ <MOINS>	{Expression.addOperator(YakaConstants.tokenImage[MOINS]) ;}		
+ | <NON>	{Expression.addOperator(YakaConstants.tokenImage[NON]) ;}	
 }
 
 

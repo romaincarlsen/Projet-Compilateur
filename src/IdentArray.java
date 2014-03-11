@@ -63,7 +63,7 @@ public class IdentArray {
 		/**
 		 *  Conversion en String du tableau d'identifiant
 		 */
-		public static String print() {
+		public static String inString() {
 			String s = "";
 			
 			for(String key : identArray.keySet()) {

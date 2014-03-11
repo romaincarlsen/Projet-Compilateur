@@ -9,69 +9,89 @@ public interface YakaConstants {
   /** End of File. */
   int EOF = 0;
   /** RegularExpression Id. */
-  int BOOLEEN = 8;
+  int PLUS = 8;
   /** RegularExpression Id. */
-  int VAR = 9;
+  int MOINS = 9;
   /** RegularExpression Id. */
-  int FAIRE = 10;
+  int MUL = 10;
   /** RegularExpression Id. */
-  int SINON = 11;
+  int DIV = 11;
   /** RegularExpression Id. */
-  int POUR = 12;
+  int INF = 12;
   /** RegularExpression Id. */
-  int SI = 13;
+  int SUP = 13;
   /** RegularExpression Id. */
-  int FSI = 14;
+  int INFEGAL = 14;
   /** RegularExpression Id. */
-  int ENTIER = 15;
+  int SUPEGAL = 15;
   /** RegularExpression Id. */
-  int RETOURNE = 16;
+  int EGAL = 16;
   /** RegularExpression Id. */
-  int VRAI = 17;
+  int DIFF = 17;
   /** RegularExpression Id. */
-  int TANTQUE = 18;
+  int ET = 18;
   /** RegularExpression Id. */
-  int CONST = 19;
+  int OU = 19;
   /** RegularExpression Id. */
-  int FAUX = 20;
+  int NON = 20;
   /** RegularExpression Id. */
-  int FAIT = 21;
+  int BOOLEEN = 21;
   /** RegularExpression Id. */
-  int OU = 22;
+  int VAR = 22;
   /** RegularExpression Id. */
-  int ET = 23;
+  int FAIRE = 23;
   /** RegularExpression Id. */
-  int NON = 24;
+  int SINON = 24;
   /** RegularExpression Id. */
-  int FONCTION = 25;
+  int POUR = 25;
   /** RegularExpression Id. */
-  int FFONCTION = 26;
+  int SI = 26;
   /** RegularExpression Id. */
-  int PROGRAMME = 27;
+  int FSI = 27;
   /** RegularExpression Id. */
-  int FPROGRAMME = 28;
+  int ENTIER = 28;
   /** RegularExpression Id. */
-  int PRINCIPAL = 29;
+  int RETOURNE = 29;
   /** RegularExpression Id. */
-  int FPRINCIPAL = 30;
+  int VRAI = 30;
   /** RegularExpression Id. */
-  int ALORS = 31;
+  int TANTQUE = 31;
   /** RegularExpression Id. */
-  int ECRIRE = 32;
+  int CONST = 32;
   /** RegularExpression Id. */
-  int LIRE = 33;
+  int FAUX = 33;
   /** RegularExpression Id. */
-  int ALALIGNE = 34;
+  int FAIT = 34;
   /** RegularExpression Id. */
-  int chiffre = 35;
+  int FONCTION = 35;
   /** RegularExpression Id. */
-  int entier = 36;
+  int FFONCTION = 36;
   /** RegularExpression Id. */
-  int lettre = 37;
+  int PROGRAMME = 37;
   /** RegularExpression Id. */
-  int ident = 38;
+  int FPROGRAMME = 38;
   /** RegularExpression Id. */
-  int chaine = 39;
+  int PRINCIPAL = 39;
+  /** RegularExpression Id. */
+  int FPRINCIPAL = 40;
+  /** RegularExpression Id. */
+  int ALORS = 41;
+  /** RegularExpression Id. */
+  int ECRIRE = 42;
+  /** RegularExpression Id. */
+  int LIRE = 43;
+  /** RegularExpression Id. */
+  int ALALIGNE = 44;
+  /** RegularExpression Id. */
+  int chiffre = 45;
+  /** RegularExpression Id. */
+  int entier = 46;
+  /** RegularExpression Id. */
+  int lettre = 47;
+  /** RegularExpression Id. */
+  int ident = 48;
+  /** RegularExpression Id. */
+  int chaine = 49;
 
   /** Lexical state. */
   int DEFAULT = 0;
@@ -88,6 +108,19 @@ public interface YakaConstants {
     "\"(*\"",
     "<token of kind 6>",
     "\"*)\"",
+    "\"+\"",
+    "\"-\"",
+    "\"*\"",
+    "\"/\"",
+    "\"<\"",
+    "\">\"",
+    "\"<=\"",
+    "\">=\"",
+    "\"=\"",
+    "\"<>\"",
+    "\"ET\"",
+    "\"OU\"",
+    "\"NON\"",
     "\"BOOLEEN\"",
     "\"VAR\"",
     "\"FAIRE\"",
@@ -102,9 +135,6 @@ public interface YakaConstants {
     "\"CONST\"",
     "\"FAUX\"",
     "\"FAIT\"",
-    "\"OU\"",
-    "\"ET\"",
-    "\"NON\"",
     "\"FONCTION\"",
     "\"FFONCTION\"",
     "\"PROGRAMME\"",
@@ -122,18 +152,8 @@ public interface YakaConstants {
     "<chaine>",
     "\",\"",
     "\";\"",
-    "\"=\"",
     "\"(\"",
     "\")\"",
-    "\"<>\"",
-    "\"<\"",
-    "\"<=\"",
-    "\">\"",
-    "\">=\"",
-    "\"+\"",
-    "\"-\"",
-    "\"*\"",
-    "\"/\"",
   };
 
 }
