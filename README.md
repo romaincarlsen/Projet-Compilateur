@@ -28,3 +28,13 @@ Instructions pour metter à jour le dépot en ligne
 	* <code>git commit -m "Un message explicite"</code>
 	* <code>git pull GitHub master</code>
 	* <code>git push GitHub master</code>
+
+
+Bin à rajouter au PATH de l'environnement
+-------------
+<code>;C:\Program Files (x86)\Java\javacc-5.0\bin;C:\Program Files (x86)\Java\jdk1.7.0_45\bin</code>
+
+
+Commande à exécuter dans le Terminal
+-------------
+<code>javacc Yaka.jj & javac *.java & java Yaka</code>
