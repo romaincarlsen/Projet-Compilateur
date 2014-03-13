@@ -1,0 +1,321 @@
+/**
+ *  Auteur: Pedrono Marie-Jo
+ *
+ * 	création : 13 février 2002
+ *
+ *  nature : projet etudiant
+ *
+ */
+
+
+options{
+	JDK_VERSION="1.5";	
+}
+
+PARSER_BEGIN(Yaka)
+
+
+
+public class Yaka {
+
+	public static void main(String args[]) {
+		Yaka analyseur;
+		java.io.InputStream input;
+		
+		if (args.length==1) {
+			System.out.print(args[args.length-1] + ": ");
+			try {
+				input = new java.io.FileInputStream(args[args.length-1]+".yaka");
+			}
+			catch (java.io.FileNotFoundException e) {
+				System.out.println("Fichier introuvable.");
+			return;
+			}
+		}
+		else if (args.length==0) {
+			System.out.println("Lecture sur l'entree standard...");
+			input = System.in;
+		}
+		else {
+			System.out.println("Usage: java Gram [fichier]");
+			return;
+		}
+		try {
+			analyseur = new Yaka(input);
+			analyseur.analyse();
+			System.out.println("analyse syntaxique reussie!");
+			System.out.println(IdentArray.inString());
+			System.out.println(Expression.inString()) ;
+		}
+		catch (ParseException e) {
+			String msg = e.getMessage();
+			msg = msg.substring(0,msg.indexOf("\n"));
+			System.out.println("Erreur de syntaxe : "+msg);
+		}
+	}
+
+	
+	/**
+	 *  Lecture d'un programme
+	 */
+	public void prog() {
+		  
+	}
+  
+}
+
+PARSER_END(Yaka)
+/***************************************/
+/********** TOKEN DEFINITIONS **********/
+/***************************************/
+
+TOKEN_MGR_DECLS :
+{public static String identLu,chaineLue;
+ public static int entierLu;}
+
+/*** Skip whitespace and comments ***/
+SKIP :
+{
+  " "
+| "\t"
+| "\n"
+| "\r"
+| "(*"   : IN_COMMENT
+}
+<IN_COMMENT> MORE:
+{
+  < ~[] >
+}
+<IN_COMMENT> SKIP:
+{
+   < "*)" >  {SwitchTo(DEFAULT);} 
+}
+
+
+/* Mots réservés*/
+
+TOKEN :
+{
+	<PLUS : "+">
+| 	<MOINS : "-">
+|	<MUL : "*">
+|	<DIV : "/">
+|	<INF : "<">
+|	<SUP : ">">
+|	<INFEGAL : "<=">
+|	<SUPEGAL : ">=">
+|	<EGAL : "=">
+|	<DIFF : "<>">
+| 	<ET : "ET">
+|	<OU : "OU">
+| 	<NON : "NON">
+|  < BOOLEEN: "BOOLEEN" >
+| < VAR: "VAR" >
+| < FAIRE: "FAIRE" >
+| < SINON: "SINON" >
+| < POUR: "POUR" >
+| < SI: "SI" >
+| < FSI: "FSI">
+| < ENTIER: "ENTIER" >
+| < RETOURNE: "RETOURNE" >
+| < VRAI: "VRAI" >
+| < TANTQUE: "TANTQUE" >
+| <CONST : "CONST">
+| <FAUX : "FAUX">
+| <FAIT : "FAIT">
+| <FONCTION : "FONCTION">
+| <FFONCTION  : "FFONCTION">
+| <PROGRAMME : "PROGRAMME" >
+| <FPROGRAMME: "FPROGRAMME" >
+| <PRINCIPAL : "PRINCIPAL">
+| <FPRINCIPAL : "FPRINCIPAL">
+| <ALORS : "ALORS">
+| <ECRIRE : "ECRIRE">
+| <LIRE : "LIRE">
+| <ALALIGNE : "ALALIGNE">
+
+}
+
+
+
+/*** unites de base nombres, idents,  strings ***/
+TOKEN  :
+{
+  < #chiffre : ["0"-"9"] >
+| < entier : (<chiffre>)+ > 
+	{entierLu = Integer.parseInt(image.toString());}
+| < #lettre: ["A"-"Z","a"-"z"] >
+| < ident : <lettre> (<lettre> | <chiffre>)* >
+	{identLu = image.toString();}
+| < chaine : "\"" (~["\""])* "\"" | "'" (~["'"])* "'" >
+	{chaineLue = image.toString();}
+}
+
+
+/**************************************/
+/********debut de la grammaire ********/
+/**************************************/
+void analyse() : {}
+{
+   <PROGRAMME> <ident>	
+   bloc()
+   <FPROGRAMME> 
+}
+
+void bloc() : {}{
+ (declConst())*
+ (declVar())*		
+   suiteExpr() 
+}
+
+void declConst() : {}
+{
+  <CONST>  defConst() ( "," defConst())* ";"
+}
+
+void defConst() : {}
+{
+	
+  (
+		  (<ident>) {IdentArray.lastIdent = YakaTokenManager.identLu;}
+		  "=" valConst()
+  ) {IdentArray.add(IdentArray.lastIdent, new IdConst(IdentArray.lastValue, IdentArray.lastType));}
+}
+
+void valConst() : {}{
+  (<entier>) {
+	  IdentArray.lastValue = YakaTokenManager.entierLu;
+	  IdentArray.lastType = YakaConstants.tokenImage[ENTIER];
+ }
+  
+ | (<ident>) {
+	 IdConst i = (IdConst) IdentArray.get(YakaTokenManager.identLu);
+	 if(i != null) {
+		 IdentArray.lastValue = i.value;
+		 IdentArray.lastType = i.type;
+	 }
+	 else {
+		 TokenMgrError error = new TokenMgrError("Error : "+YakaTokenManager.identLu+" ident not found", TokenMgrError.LEXICAL_ERROR);
+		 System.err.println(error.getMessage());
+	 }
+ }
+ 
+ | (<VRAI>) {
+	 IdentArray.lastValue = YakaConstants.tokenImage[VRAI];
+	 IdentArray.lastType = YakaConstants.tokenImage[BOOLEEN];
+ }
+ 
+ | (<FAUX>) {
+	 IdentArray.lastValue = YakaConstants.tokenImage[FAUX];
+	 IdentArray.lastType = YakaConstants.tokenImage[BOOLEEN];
+ }
+ 
+}
+
+
+void declVar() : {}
+{
+  <VAR> type()
+  (<ident>) {
+	  IdentArray.shiftOffset();
+	  IdentArray.add(YakaTokenManager.identLu, new IdVar(IdentArray.currentOffset, IdentArray.lastType));
+  }
+  ("," 
+      (<ident>) {
+		  IdentArray.shiftOffset();
+		  IdentArray.add(YakaTokenManager.identLu, new IdVar(IdentArray.currentOffset, IdentArray.lastType));
+	  }
+  )* ";"
+	
+}
+
+void type() :{}
+{
+   (<ENTIER>) {IdentArray.lastType = YakaConstants.tokenImage[ENTIER];}			
+ | (<BOOLEEN>) {IdentArray.lastType = YakaConstants.tokenImage[BOOLEEN];}		
+}
+/*
+ * Syntaxe des instructions.
+ */
+void suiteExpr() : {}
+{ (expression() (";" (expression())? )*)? }
+
+
+
+/*
+ * Expression .
+ */
+void expression() : {}
+{
+  simpleExpr() 
+  (opRel() 
+  simpleExpr() 
+  )?
+}
+
+
+
+void simpleExpr() : {}
+{
+   terme() 
+   (opAdd() 
+   terme()	
+   )*
+} 
+void terme() : {}
+{
+  facteur() 
+  (opMul() 
+  facteur()	
+  )*
+}
+void facteur() : {}
+{   primaire() 
+  |  opNeg() primaire() 
+}
+
+void primaire (): {}
+{
+   valeur()
+ | "(" expression() ")" 
+ 
+}
+
+void valeur () : {}
+{ <entier>	{Expression.addType("ENTIER");}
+ | <ident> 	{Expression.addType(IdentArray.get(YakaTokenManager.identLu).type);}
+ | <VRAI> 	{Expression.addType("BOOLEEN");}	
+ | <FAUX> 	{Expression.addType("BOOLEEN");}
+ 
+}
+
+void opRel() : {}
+{
+   <EGAL> 	{Expression.addOperator(YakaConstants.tokenImage[EGAL]) ;}		
+ | <DIFF> 	{Expression.addOperator(YakaConstants.tokenImage[DIFF]) ;}	
+ | <INF>	{Expression.addOperator(YakaConstants.tokenImage[INF]) ;}		
+ | <INFEGAL>	{Expression.addOperator(YakaConstants.tokenImage[INFEGAL]) ;}	
+ | <SUP> 	{Expression.addOperator(YakaConstants.tokenImage[SUP]) ;}	
+ | <SUPEGAL>	{Expression.addOperator(YakaConstants.tokenImage[SUPEGAL]) ;}	
+} 
+
+void opAdd() : {}
+{
+    <PLUS>	{Expression.addOperator(YakaConstants.tokenImage[PLUS]) ;}	
+  |  <MOINS>  	{Expression.addOperator(YakaConstants.tokenImage[MOINS]) ;}	
+  | <OU> 	{Expression.addOperator(YakaConstants.tokenImage[OU]) ;}	
+}
+
+void opMul() : {}
+{
+  <MUL>		{Expression.addOperator(YakaConstants.tokenImage[MUL]) ;}	
+  | <DIV>	{Expression.addOperator(YakaConstants.tokenImage[DIV]) ;}	
+  | <ET>	{Expression.addOperator(YakaConstants.tokenImage[ET]) ;}		
+} 
+
+void opNeg() : {}
+{ <MOINS>	{Expression.addOperator(YakaConstants.tokenImage[MOINS]) ;}		
+ | <NON>	{Expression.addOperator(YakaConstants.tokenImage[NON]) ;}	
+}
+
+
