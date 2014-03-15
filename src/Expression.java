@@ -4,8 +4,11 @@ import java.util.LinkedList;
 public class Expression {
 
 	// Pile des opérateus et valeurs
-	private static LinkedList<String> operatorStack = new LinkedList<String>() ;
-	private static LinkedList<String> typeStack = new LinkedList<String>() ;
+	private static LinkedList<String> operatorStack = new LinkedList<String>();
+	private static LinkedList<String> typeStack = new LinkedList<String>();
+
+	// Pile des tokens (utile pour afficher une erreur)
+	private static LinkedList<String> tokenStack = new LinkedList<String>();
 
 	/**
 	 *  Constructeur
@@ -35,6 +38,10 @@ public class Expression {
 
 	public static void addOperator(String val) {
 		operatorStack.push(val) ;
+	}
+
+	public static void addToken(String val) {
+		tokenStack.push(val) ;
 	}
 
 	public static String popType() {
@@ -108,16 +115,31 @@ public class Expression {
 	}
 
 
-	public static String inString() {
+	public static String getCurrentExpression() {
+		String token1 = tokenStack.get(tokenStack.size() - 2);
+		String operator = operatorStack.get(operatorStack.size() - 1);
+		String token2 = tokenStack.get(tokenStack.size() - 1);
+
+		return token1+" "+operator+" "+token2;
+	}
+
+
+	public static String getCurrentSingleExpression() {
+		String operator = tokenStack.get(tokenStack.size() - 1);
+		String token = operatorStack.get(operatorStack.size() - 1);
+
+		return operator+" "+token;
+	}
+
+
+	public static String string() {
 		String s = "" ;
 
-		s += "Types Stack\n";
 		for(String i : typeStack)
 			s += i + "\n" ;
 
 		s += "\n" ;
 
-		s += "Operators Stack\n";
 		for(String i : operatorStack)
 			s += i + "\n" ;
 

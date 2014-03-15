@@ -1,0 +1,196 @@
+; entete
+.MODEL SMALL
+	.586
+
+.CODE
+debut:
+ 	STARTUPCODE
+
+; ouvrePrinc 8
+	mov bp, sp
+	sub sp, 8
+
+; iload -2
+	push word ptr [bp-2]
+
+; iconst 10
+	push 10
+
+; iconst 10
+	push 10
+
+; iconst 2
+	push 2
+
+; idiv
+	pop bx
+	pop ax
+	cwd
+	idiv bx
+	push ax
+
+; iadd
+	pop bx
+	pop ax
+	add ax, bx
+	push ax
+
+; iconst 5
+	push 5
+
+; idiv
+	pop bx
+	pop ax
+	cwd
+	idiv bx
+	push ax
+
+; iegal
+	pop bx
+	pop ax
+	cmp ax, bx
+	jne $+3
+	push -1
+	jmp $+2
+	push 0
+
+; iload -4
+	push word ptr [bp-4]
+
+; iload -2
+	push word ptr [bp-2]
+
+; iconst 3
+	push 3
+
+; iload -2
+	push word ptr [bp-2]
+
+; imul
+	pop bx
+	pop ax
+	imul bx
+	push ax
+
+; iadd
+	pop bx
+	pop ax
+	add ax, bx
+	push ax
+
+; iconst 10
+	push 10
+
+; isub
+	pop bx
+	pop ax
+	sub ax, bx
+	push ax
+
+; iegal
+	pop bx
+	pop ax
+	cmp ax, bx
+	jne $+3
+	push -1
+	jmp $+2
+	push 0
+
+; iload -6
+	push word ptr [bp-6]
+
+; iconst -1
+	push -1
+
+; iconst -1
+	push -1
+
+; iand
+	pop bx
+	pop ax
+	and ax, bx
+	push ax
+
+; iconst 0
+	push 0
+
+; inot
+	pop ax
+	not ax
+	push ax
+
+; ior
+	pop bx
+	pop ax
+	or ax, bx
+	push ax
+
+; iegal
+	pop bx
+	pop ax
+	cmp ax, bx
+	jne $+3
+	push -1
+	jmp $+2
+	push 0
+
+; iload -4
+	push word ptr [bp-4]
+
+; iconst 5
+	push 5
+
+; ineg
+	pop ax
+	neg ax
+	push ax
+
+; iegal
+	pop bx
+	pop ax
+	cmp ax, bx
+	jne $+3
+	push -1
+	jmp $+2
+	push 0
+
+; iload -8
+	push word ptr [bp-8]
+
+; iload -2
+	push word ptr [bp-2]
+
+; iload -4
+	push word ptr [bp-4]
+
+; iconst 4
+	push 4
+
+; iadd
+	pop bx
+	pop ax
+	add ax, bx
+	push ax
+
+; iinfegal
+	pop bx
+	pop ax
+	cmp ax, bx
+	jg $+3
+	push -1
+	jmp $+2
+	push 0
+
+; iegal
+	pop bx
+	pop ax
+	cmp ax, bx
+	jne $+3
+	push -1
+	jmp $+2
+	push 0
+
+; queue
+	nop
+	exitcode
+	END debut

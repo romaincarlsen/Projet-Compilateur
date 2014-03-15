@@ -1,35 +1,41 @@
 
-public class IdVar extends Ident {   
+public class IdVar extends Ident {
 
 		// Adresse de la variable
-		private int offset;
+		private Integer offset;
 
 
 		/**
 		 *  Constructeur
 		 */
-		public IdVar(int offset, String type) {
+		public IdVar(Integer offset, String type) {
 			this.offset = offset;
 			this.type = type;
 		}
 
 		public boolean isVar() {
-			return true ;			
+			return true ;
 		}
 
 		public boolean isConst() {
-			return false ;			
+			return false ;
 		}
-		
-		public Object getValue() {
-			return offset ;	
+
+		public Integer getValue() {
+			return offset;
 		}
-		
+
 		/**
 		 *  Retourne une variable sous forme de chaine
 		 */
 		public String toString() {
-			return "VARIABLE, "+type+", offset: "+offset;
+			String pad = ""; // Pour aligner le mot ENTIER et BOOLEEN à la même colonne
+
+			if(type.equals(YakaConstants.tokenImage[YakaConstants.ENTIER])) {
+				pad = " ";
+			}
+
+			return "VARIABLE , "+type+pad+", offset : "+offset;
 		}
 
 }

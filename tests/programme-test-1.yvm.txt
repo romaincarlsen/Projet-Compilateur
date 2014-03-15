@@ -1,0 +1,40 @@
+	entete
+	ouvrePrinc 8
+	iload -2
+	iconst 10
+	iconst 10
+	iconst 2
+	idiv
+	iadd
+	iconst 5
+	idiv
+	iegal
+	iload -4
+	iload -2
+	iconst 3
+	iload -2
+	imul
+	iadd
+	iconst 10
+	isub
+	iegal
+	iload -6
+	iconst -1
+	iconst -1
+	iand
+	iconst 0
+	inot
+	ior
+	iegal
+	iload -4
+	iconst 5
+	ineg
+	iegal
+	iload -8
+	iload -2
+	iload -4
+	iconst 4
+	iadd
+	iinfegal
+	iegal
+	queue

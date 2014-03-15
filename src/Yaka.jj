@@ -1,7 +1,7 @@
 /**
  *  Auteur: Pedrono Marie-Jo
  *
- * 	création : 13 février 2002
+ * 	creation : 13 fevrier 2002
  *
  *  Nature : Projet Etudiant
  *
@@ -16,23 +16,23 @@ PARSER_BEGIN(Yaka)
 
 	public class Yaka {
 
-		public static String result = "";
+
+		// Choix de l'interpreteur a utiliser
+		public static String interpreterType = "YVMasm"; // YVM ou YVMasm
+
+		// Interpreteur
+		public static YVM Interpreter;
+
+		// Nom du fichier a creer par l'interpreteur
+		public static String scriptOutputName = "../programme-test.txt";
 
 
-		// Choix de l'interpréteur à utiliser
-		public static String interpreterType = "YVM"; // YVM ou YVMasm
-
-		// Nom du fichier à créer par l'interpréteur
-		public static String scriptOutputName = "prog.asm";
-
-
-		// Main : point d'entrée pour le compilateur
+		// Main : point d'entree pour le compilateur
 		public static void main(String args[]) {
 			Yaka analyzer;
-			YVM interpreter;
 			java.io.InputStream input;
 
-			// Récupération du texte/script à traiter
+			// Recuperation du texte/script a traiter
 			if(args.length==1) {
 				Writer.print(args[args.length-1] + ": ");
 				try {
@@ -44,7 +44,7 @@ PARSER_BEGIN(Yaka)
 				}
 			}
 			else if (args.length==0) {
-				Writer.println("\nLecture sur l'entree standard...");
+				Writer.println("\nLecture sur l'entree standard...\n");
 				input = System.in;
 			}
 			else {
@@ -52,25 +52,37 @@ PARSER_BEGIN(Yaka)
 				return;
 			}
 
+			// Declaration de l'interpreteur
+			if(interpreterType.equals("YVM")) {
+				Interpreter = new YVM(scriptOutputName);
+			}
+			else if(interpreterType.equals("YVMasm")) {
+				Interpreter = new YVMasm(scriptOutputName);
+			}
+
 			// Analyse
 			try {
+
 				analyzer = new Yaka(input);
 				analyzer.analyse();
 
-				Writer.println("\nAnalyse Syntaxique reussie !");
+				Writer.println("\nAnalyse Syntaxique terminee !\n");
 
-				// On affiche le résultat du tableau d'ident
-				Writer.println(IdentArray.inString());
+				// On affiche le resultat du tableau d'ident
+				//Writer.println(IdentArray.string());
 
-				// On affiche le résultat du tableau d'expression
-				Writer.println(Expression.inString()) ;
+				// On affiche le resultat du tableau d'expression
+				//Writer.println(Expression.string()) ;
 
-				// On affiche le script YVM
-				Writer.println(result);
+				// On créer le script YVM
+				Interpreter.outputSave();
+
+				Writer.println("Programme de sortie : "+scriptOutputName+"\n");
+
 			}
 			catch(ParseException e) {
 				TokenMgrError error = new TokenMgrError(
-					"Erreur de syntaxe : "+e.getMessage(),
+					"Erreur de syntaxe, ligne "+YakaTokenManager.currentLine+" :\n"+e.getMessage(),
 					TokenMgrError.LEXICAL_ERROR
 				);
 				Writer.errorln(error.getMessage());
@@ -98,6 +110,7 @@ PARSER_END(Yaka)
 TOKEN_MGR_DECLS : {
 	public static String identLu, chaineLue;
 	public static int entierLu;
+	public static int currentLine = 1;
 }
 
 
@@ -105,7 +118,7 @@ TOKEN_MGR_DECLS : {
 SKIP : {
 	  " "
 	| "\t"
-	| "\n"
+	| "\n" {YakaTokenManager.currentLine++;}
 	| "\r"
 	| "(*" : IN_COMMENT
 }
@@ -119,7 +132,7 @@ SKIP : {
 }
 
 
-/*** Mots réservés ***/
+/*** Mots reserves ***/
 TOKEN : {
 	  <PLUS : "+">
 	| <MOINS : "-">
@@ -189,11 +202,13 @@ TOKEN  : {
 
 void analyse() : {} {
 	<PROGRAMME> <ident>{
-		Yaka.result += "entete" ;
+		Yaka.Interpreter.entete();
+		//Yaka.result += "entete" ;
 	}
 	bloc()
 	<FPROGRAMME>{
-		Yaka.result += "\nqueue" ;
+		Yaka.Interpreter.queue();
+		//Yaka.result += "\nqueue" ;
 	}
 }
 
@@ -201,7 +216,8 @@ void analyse() : {} {
 void bloc() : {} {
 	(declConst())*
 	(declVar())* {
-		Yaka.result += "\nouvrePrinc "+ IdentArray.nbVar() ;
+		Yaka.Interpreter.ouvrePrinc(IdentArray.nbVar());
+		//Yaka.result += "\nouvrePrinc "+ IdentArray.nbVar() ;
 	}
 	suiteExpr()
 }
@@ -231,7 +247,7 @@ void defConst() : {} {
 void valConst() : {} {
 	(<entier>) {
 		IdentArray.lastValue = YakaTokenManager.entierLu;
-		IdentArray.lastType = YakaConstants.tokenImage[ENTIER];
+		IdentArray.lastType = tokenImage[ENTIER];
 	}
 
 	| (<ident>) {
@@ -239,14 +255,14 @@ void valConst() : {} {
 
 		try {
 			if(i == null)
-				throw new ParseException("Identifiant '"+YakaTokenManager.identLu+"'' non existant");
+				throw new ParseException("Identifiant \""+YakaTokenManager.identLu+"\" non existant");
 
 			IdentArray.lastValue = i.value;
 			IdentArray.lastType = i.type;
 		}
 		catch(ParseException e) {
 			TokenMgrError error = new TokenMgrError(
-				"Erreur lexicale : "+e.getMessage(),
+				"Erreur lexicale, ligne "+YakaTokenManager.currentLine+" :\n"+e.getMessage(),
 				TokenMgrError.LEXICAL_ERROR
 			);
 			Writer.errorln(error.getMessage());
@@ -255,13 +271,13 @@ void valConst() : {} {
  	}
 
 	| (<VRAI>) {
-		IdentArray.lastValue = Ident.TRUE;
-		IdentArray.lastType = YakaConstants.tokenImage[BOOLEEN];
+		IdentArray.lastValue = Yaka.Interpreter.TRUE;
+		IdentArray.lastType = tokenImage[BOOLEEN];
 	}
 
 	| (<FAUX>) {
-		IdentArray.lastValue = Ident.FALSE;
-		IdentArray.lastType = YakaConstants.tokenImage[BOOLEEN];
+		IdentArray.lastValue = Yaka.Interpreter.FALSE;
+		IdentArray.lastType = tokenImage[BOOLEEN];
 	}
 
 }
@@ -292,11 +308,11 @@ void declVar() : {} {
 
 void type() :{} {
 	(<ENTIER>) {
-	  	IdentArray.lastType = YakaConstants.tokenImage[ENTIER];
+	  	IdentArray.lastType = tokenImage[ENTIER];
 	}
 
 	| (<BOOLEEN>) {
-		IdentArray.lastType = YakaConstants.tokenImage[BOOLEEN];
+		IdentArray.lastType = tokenImage[BOOLEEN];
 	}
 }
 
@@ -327,51 +343,57 @@ void expression() : {} {
 			String t2 = Expression.popType();
 			String op = Expression.popOperator();
 
-			String res = Expression.binExprReturn(t1,t2,op);
-			Expression.addType(res);
-
-			String inf =  YakaConstants.tokenImage[INF];
-			String infegal = YakaConstants.tokenImage[INFEGAL];
-			String sup = YakaConstants.tokenImage[SUP];
-			String supegal = YakaConstants.tokenImage[SUPEGAL];
-			String egal = YakaConstants.tokenImage[EGAL];
-			String diff = YakaConstants.tokenImage[DIFF];
+			String inf =  tokenImage[INF];
+			String infegal = tokenImage[INFEGAL];
+			String sup = tokenImage[SUP];
+			String supegal = tokenImage[SUPEGAL];
+			String egal = tokenImage[EGAL];
+			String diff = tokenImage[DIFF];
 
 			try {
 
-				if(res == YakaConstants.tokenImage[ERROR])
-					throw new ParseException("Type '"+t1+"' ou '"+t2+"'' innatendu");
+				String res = Expression.binExprReturn(t1,t2,op);
+
+				if(res == tokenImage[ERROR])
+					throw new ParseException("Operatio de type "+t1+" "+op+" "+t2+" interdite");
 
 				else {
-					String s = "" ;
+					Expression.addType(res);
+					//String s = "" ;
 
 					if (op == inf)
-						s = "\niinf ";
+						Yaka.Interpreter.iinf();
+						//s = "\niinf ";
 
 					else if (op == infegal)
-						s = "\niinfegal ";
+						Yaka.Interpreter.iinfegal();
+						//s = "\niinfegal ";
 
 					else if (op == sup)
-						s = "\nisup ";
+						Yaka.Interpreter.isup();
+						//s = "\nisup ";
 
 					else if (op == supegal)
-						s = "\nisupegal ";
+						Yaka.Interpreter.isupegal();
+						//s = "\nisupegal ";
 
 					else if (op == egal)
-						s = "\niegal ";
+						Yaka.Interpreter.iegal();
+						//s = "\niegal ";
 
 					else if (op == diff)
-						s = "\nidiff ";
+						Yaka.Interpreter.idiff();
+						//s = "\nidiff ";
 
 					else
-						throw new ParseException("Opérateur '"+op+"' innatendu");
+						throw new ParseException("Operateur "+op+" innatendu");
 
-					Yaka.result += s;
+					//Yaka.result += s;
 				}
 			}
 			catch(ParseException e) {
 				TokenMgrError error = new TokenMgrError(
-					"Erreur d'expression : "+e.getMessage(),
+					"Erreur d'expression, ligne "+YakaTokenManager.currentLine+" :\n"+e.getMessage(),
 					TokenMgrError.LEXICAL_ERROR
 				);
 				Writer.errorln(error.getMessage());
@@ -393,38 +415,42 @@ void simpleExpr() : {} {
 			String t2 = Expression.popType();
 			String op = Expression.popOperator();
 
-			String res = Expression.binExprReturn(t1,t2,op);
-			Expression.addType(res);
-
-			String plus = YakaConstants.tokenImage[PLUS];
-			String moins = YakaConstants.tokenImage[MOINS];
-			String ou = YakaConstants.tokenImage[OU];
+			String plus = tokenImage[PLUS];
+			String moins = tokenImage[MOINS];
+			String ou = tokenImage[OU];
 
 			try {
-				if(res == YakaConstants.tokenImage[ERROR])
-					throw new ParseException("Type '"+t1+"' ou '"+t2+"'' innatendu");
+
+				String res = Expression.binExprReturn(t1,t2,op);
+
+				if(res == tokenImage[ERROR])
+					throw new ParseException("Operation de type "+t1+" "+op+" "+t2+" interdite");
 
 				else {
-					String s = "";
+					Expression.addType(res);
+					//String s = "";
 
 					if(op == plus)
-						s = "\niadd ";
+						Yaka.Interpreter.iadd();
+						//s = "\niadd ";
 
 					else if (op == moins)
-						s = "\nisub ";
+						Yaka.Interpreter.isub();
+						//s = "\nisub ";
 
 					else if (op == ou)
-						s = "\nior ";
+						Yaka.Interpreter.ior();
+						//s = "\nior ";
 
 					else
-						throw new ParseException("Opérateur '"+op+"' innatendu");
+						throw new ParseException("Operateur "+op+" innatendu");
 
-					Yaka.result += s;
+					//Yaka.result += s;
 				}
 			}
 			catch(ParseException e) {
 				TokenMgrError error = new TokenMgrError(
-					"Erreur d'expression : "+e.getMessage(),
+					"Erreur d'expression, ligne "+YakaTokenManager.currentLine+" :\n"+e.getMessage(),
 					TokenMgrError.LEXICAL_ERROR
 				);
 				Writer.errorln(error.getMessage());
@@ -446,38 +472,42 @@ void terme() : {} {
 			String t2 = Expression.popType();
 			String op = Expression.popOperator();
 
-			String res = Expression.binExprReturn(t1,t2,op);
-			Expression.addType(res);
-
-			String mul = YakaConstants.tokenImage[MUL];
-			String div = YakaConstants.tokenImage[DIV];
-			String et = YakaConstants.tokenImage[ET];
+			String mul = tokenImage[MUL];
+			String div = tokenImage[DIV];
+			String et = tokenImage[ET];
 
 			try {
-				if(res == YakaConstants.tokenImage[ERROR])
-					throw new ParseException("Type '"+t1+"' ou '"+t2+"'' innatendu");
+
+				String res = Expression.binExprReturn(t1,t2,op);
+
+				if(res == tokenImage[ERROR])
+					throw new ParseException("Operation de type "+t1+" "+op+" "+t2+" interdite");
 
 				else {
-					String s = "";
+					Expression.addType(res);
+					//String s = "";
 
 					if (op == mul)
-						s = "\nimul ";
+						Yaka.Interpreter.imul();
+						//s = "\nimul ";
 
 					else if (op == div)
-						s = "\nidiv ";
+						Yaka.Interpreter.idiv();
+						//s = "\nidiv ";
 
 					else if(op == et)
-						s = "\niand ";
+						Yaka.Interpreter.iand();
+						//s = "\niand ";
 
 					else
-						throw new ParseException("Opérateur '"+op+"' innatendu");
+						throw new ParseException("Operateur "+op+" innatendu");
 
-					Yaka.result += s;
+					//Yaka.result += s;
 				}
 			}
 			catch(ParseException e) {
 				TokenMgrError error = new TokenMgrError(
-					"Erreur d'expression : "+e.getMessage(),
+					"Erreur d'expression, ligne "+YakaTokenManager.currentLine+" :\n"+e.getMessage(),
 					TokenMgrError.LEXICAL_ERROR
 				);
 				Writer.errorln(error.getMessage());
@@ -495,31 +525,34 @@ void facteur() : {} {
 		String t = Expression.popType();
 		String op = Expression.popOperator();
 
-		String res = Expression.unExprReturn(t, op);
-		Expression.addType(res);
-
 		try {
-			if(res == YakaConstants.tokenImage[ERROR])
-				throw new ParseException("Type '"+t+"' innatendu");
+
+			String res = Expression.unExprReturn(t, op);
+
+			if(res == tokenImage[ERROR])
+					throw new ParseException("Operation de type "+op+" "+t+" interdite");
 
 			else {
-				String s = "";
+				Expression.addType(res);
+				//String s = "";
 
-				if(op == YakaConstants.tokenImage[MOINS])
-					s = "\nineg ";
+				if(op == tokenImage[MOINS])
+					Yaka.Interpreter.ineg();
+					//s = "\nineg ";
 
-				else if(op == YakaConstants.tokenImage[NON])
-					s = "\ninot ";
+				else if(op == tokenImage[NON])
+					Yaka.Interpreter.inot();
+					//s = "\ninot ";
 
 				else
-					throw new ParseException("Opérateur '"+op+"' innatendu");
+					throw new ParseException("Operateur "+op+" innatendu");
 
-				Yaka.result += s ;
+				//Yaka.result += s ;
 			}
 		}
 		catch(ParseException e) {
 			TokenMgrError error = new TokenMgrError(
-				"Erreur d'expression : "+e.getMessage(),
+				"Erreur d'expression, ligne "+YakaTokenManager.currentLine+" :\n"+e.getMessage(),
 				TokenMgrError.LEXICAL_ERROR
 			);
 			Writer.errorln(error.getMessage());
@@ -537,29 +570,35 @@ void primaire (): {} {
 void valeur () : {} {
 
 	<entier> {
-		Expression.addType("\"ENTIER\"");
-		Yaka.result += "\niconst " + YakaTokenManager.entierLu ;
+		Expression.addType(tokenImage[ENTIER]);
+		Yaka.Interpreter.iconst(YakaTokenManager.entierLu);
+		//Yaka.result += "\niconst " + YakaTokenManager.entierLu ;
 	}
 
 	| <ident> {
+		Ident id = IdentArray.get(YakaTokenManager.identLu);
 		Expression.addType(IdentArray.get(YakaTokenManager.identLu).type);
 
-		if(IdentArray.get(YakaTokenManager.identLu).isVar())
-			Yaka.result += "\niload " ;
-		else
-			Yaka.result += "\niconst " ;
+		if(id.isVar())
+			Yaka.Interpreter.iload(id.getValue());
+			//Yaka.result += "\niload " ;
+		else if(id.isConst())
+			Yaka.Interpreter.iconst(id.getValue());
+			//Yaka.result += "\niconst " ;
 
-		Yaka.result += IdentArray.get(YakaTokenManager.identLu).getValue() ;
+		//Yaka.result += id.getValue() ;
 	}
 
 	| <VRAI> 	{
-		Expression.addType("\"BOOLEEN\"");
-		Yaka.result += "\niconst " + Ident.TRUE ;
+		Expression.addType(tokenImage[BOOLEEN]);
+		Yaka.Interpreter.iconst(Yaka.Interpreter.TRUE);
+		//Yaka.result += "\niconst " + Ident.TRUE ;
 	}
 
 	| <FAUX> 	{
-		Expression.addType("\"BOOLEEN\"");
-		Yaka.result += "\niconst " + Ident.FALSE ;
+		Expression.addType(tokenImage[BOOLEEN]);
+		Yaka.Interpreter.iconst(Yaka.Interpreter.FALSE);
+		//Yaka.result += "\niconst " + Ident.FALSE ;
 	}
 
 }
@@ -567,68 +606,68 @@ void valeur () : {} {
 
 void opRel() : {} {
 	<EGAL> {
-		Expression.addOperator(YakaConstants.tokenImage[EGAL]);
+		Expression.addOperator(tokenImage[EGAL]);
 	}
 
 	| <DIFF> {
-		Expression.addOperator(YakaConstants.tokenImage[DIFF]);
+		Expression.addOperator(tokenImage[DIFF]);
 	}
 
 	| <INF>	{
-		Expression.addOperator(YakaConstants.tokenImage[INF]);
+		Expression.addOperator(tokenImage[INF]);
 	}
 
 	| <INFEGAL>	{
-		Expression.addOperator(YakaConstants.tokenImage[INFEGAL]);
+		Expression.addOperator(tokenImage[INFEGAL]);
 	}
 
 	| <SUP> {
-		Expression.addOperator(YakaConstants.tokenImage[SUP]);
+		Expression.addOperator(tokenImage[SUP]);
 	}
 
 	| <SUPEGAL>	{
-		Expression.addOperator(YakaConstants.tokenImage[SUPEGAL]);
+		Expression.addOperator(tokenImage[SUPEGAL]);
 	}
 }
 
 
 void opAdd() : {} {
 	<PLUS> {
-		Expression.addOperator(YakaConstants.tokenImage[PLUS]);
+		Expression.addOperator(tokenImage[PLUS]);
 	}
 
 	| <MOINS> {
-		Expression.addOperator(YakaConstants.tokenImage[MOINS]);
+		Expression.addOperator(tokenImage[MOINS]);
 	}
 
 	| <OU> {
-		Expression.addOperator(YakaConstants.tokenImage[OU]);
+		Expression.addOperator(tokenImage[OU]);
 	}
 }
 
 
 void opMul() : {} {
 	<MUL> {
-		Expression.addOperator(YakaConstants.tokenImage[MUL]);
+		Expression.addOperator(tokenImage[MUL]);
 	}
 
 	| <DIV> {
-		Expression.addOperator(YakaConstants.tokenImage[DIV]);
+		Expression.addOperator(tokenImage[DIV]);
 	}
 
 	| <ET> {
-		Expression.addOperator(YakaConstants.tokenImage[ET]);
+		Expression.addOperator(tokenImage[ET]);
 	}
 }
 
 
 void opNeg() : {} {
 	<MOINS> {
-		Expression.addOperator(YakaConstants.tokenImage[MOINS]);
+		Expression.addOperator(tokenImage[MOINS]);
 	}
 
 	| <NON> {
-		Expression.addOperator(YakaConstants.tokenImage[NON]);
+		Expression.addOperator(tokenImage[NON]);
 	}
 }
 

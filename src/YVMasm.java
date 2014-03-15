@@ -23,7 +23,6 @@ public class YVMasm extends YVM {
 		result += "\tnop\n";
 		result += "\texitcode\n";
 		result += "\tEND debut\n";
-		result += "\n";
 	}
 
 	@Override
@@ -74,11 +73,11 @@ public class YVMasm extends YVM {
 		result += "\tnot ax\n";
 		result += "\tpush ax\n";
 		/*result += "\tpop ax\n";
-		result += "\tcmp ax, "+bool_true+"\n";
+		result += "\tcmp ax, "+Integer.toString(TRUE)+"\n";
 		result += "\tjne $+3\n";
-		result += "\tpush "+bool_false+"\n";
+		result += "\tpush "+Integer.toString(FALSE)+"\n";
 		result += "\tjmp $+2\n";
-		result += "\tpush "+bool_true+"\n";*/
+		result += "\tpush "+Integer.toString(TRUE)+"\n";*/
 		result += "\n";
 	}
 
@@ -103,16 +102,16 @@ public class YVMasm extends YVM {
 		result += "\tor ax, bx\n";
 		result += "\tpush ax\n";
 		/*result += "\tpop ax\n";
-		result += "\tcmp ax, "+bool_true+"\n";
+		result += "\tcmp ax, "+Integer.toString(TRUE)+"\n";
 		result += "\tjne $+3\n";
-		result += "\tpush "+bool_true+"\n";
+		result += "\tpush "+Integer.toString(TRUE)+"\n";
 		result += "\tjmp $+7\n";
 		result += "\tpop ax\n";
-		result += "\tcmp ax, "+bool_true+"\n";
+		result += "\tcmp ax, "+Integer.toString(TRUE)+"\n";
 		result += "\tjne $+3\n";
-		result += "\tpush "+bool_true+"\n";
+		result += "\tpush "+Integer.toString(TRUE)+"\n";
 		result += "\tjmp $+2\n";
-		result += "\tpush "+bool_false+"\n";*/
+		result += "\tpush "+Integer.toString(FALSE)+"\n";*/
 		result += "\n";
 
 	}
@@ -125,16 +124,16 @@ public class YVMasm extends YVM {
 		result += "\tand ax, bx\n";
 		result += "\tpush ax\n";
 		/*result += "\tpop ax\n";
-		result += "\tcmp ax, "+bool_false+"\n";
+		result += "\tcmp ax, "+Integer.toString(FALSE)+"\n";
 		result += "\tjne $+3\n";
-		result += "\tpush "+bool_false+"\n";
+		result += "\tpush "+Integer.toString(FALSE)+"\n";
 		result += "\tjmp $+7\n";
 		result += "\tpop ax\n";
-		result += "\tcmp ax, "+bool_false+"\n";
+		result += "\tcmp ax, "+Integer.toString(FALSE)+"\n";
 		result += "\tjne $+3\n";
-		result += "\tpush "+bool_false+"\n";
+		result += "\tpush "+Integer.toString(FALSE)+"\n";
 		result += "\tjmp $+2\n";
-		result += "\tpush "+bool_true+"\n";*/
+		result += "\tpush "+Integer.toString(TRUE)+"\n";*/
 		result += "\n";
 	}
 
@@ -144,10 +143,10 @@ public class YVMasm extends YVM {
 		result += "\tpop bx\n";
 		result += "\tpop ax\n";
 		result += "\tcmp ax, bx\n";
-		result += "\tjge $+3";
-		result += "\tpush "+bool_true+"\n";
+		result += "\tjge $+3\n";
+		result += "\tpush "+Integer.toString(TRUE)+"\n";
 		result += "\tjmp $+2\n";
-		result += "\tpush "+bool_false+"\n";
+		result += "\tpush "+Integer.toString(FALSE)+"\n";
 		result += "\n";
 	}
 
@@ -157,10 +156,10 @@ public class YVMasm extends YVM {
 		result += "\tpop bx\n";
 		result += "\tpop ax\n";
 		result += "\tcmp ax, bx\n";
-		result += "\tjle $+3";
-		result += "\tpush "+bool_true+"\n";
+		result += "\tjle $+3\n";
+		result += "\tpush "+Integer.toString(TRUE)+"\n";
 		result += "\tjmp $+2\n";
-		result += "\tpush "+bool_false+"\n";
+		result += "\tpush "+Integer.toString(FALSE)+"\n";
 		result += "\n";
 	}
 
@@ -170,10 +169,10 @@ public class YVMasm extends YVM {
 		result += "\tpop bx\n";
 		result += "\tpop ax\n";
 		result += "\tcmp ax, bx\n";
-		result += "\tjg $+3";
-		result += "\tpush "+bool_true+"\n";
+		result += "\tjg $+3\n";
+		result += "\tpush "+Integer.toString(TRUE)+"\n";
 		result += "\tjmp $+2\n";
-		result += "\tpush "+bool_false+"\n";
+		result += "\tpush "+Integer.toString(FALSE)+"\n";
 		result += "\n";
 	}
 
@@ -183,10 +182,10 @@ public class YVMasm extends YVM {
 		result += "\tpop bx\n";
 		result += "\tpop ax\n";
 		result += "\tcmp ax, bx\n";
-		result += "\tjl $+3";
-		result += "\tpush "+bool_true+"\n";
+		result += "\tjl $+3\n";
+		result += "\tpush "+Integer.toString(TRUE)+"\n";
 		result += "\tjmp $+2\n";
-		result += "\tpush "+bool_false+"\n";
+		result += "\tpush "+Integer.toString(FALSE)+"\n";
 		result += "\n";
 	}
 
@@ -196,10 +195,10 @@ public class YVMasm extends YVM {
 		result += "\tpop bx\n";
 		result += "\tpop ax\n";
 		result += "\tcmp ax, bx\n";
-		result += "\tjne $+3";
-		result += "\tpush "+bool_true+"\n";
+		result += "\tjne $+3\n";
+		result += "\tpush "+Integer.toString(TRUE)+"\n";
 		result += "\tjmp $+2\n";
-		result += "\tpush "+bool_false+"\n";
+		result += "\tpush "+Integer.toString(FALSE)+"\n";
 		result += "\n";
 	}
 
@@ -209,10 +208,10 @@ public class YVMasm extends YVM {
 		result += "\tpop bx\n";
 		result += "\tpop ax\n";
 		result += "\tcmp ax, bx\n";
-		result += "\tje $+3";
-		result += "\tpush "+bool_true+"\n";
+		result += "\tje $+3\n";
+		result += "\tpush "+Integer.toString(TRUE)+"\n";
 		result += "\tjmp $+2\n";
-		result += "\tpush "+bool_false+"\n";
+		result += "\tpush "+Integer.toString(FALSE)+"\n";
 		result += "\n";
 	}
 
@@ -239,26 +238,26 @@ public class YVMasm extends YVM {
 	}
 
 	@Override
-	public void ifeq(int label) {
+	public void ifeq(String label) {
 		result += "; ifeq\n";
 		result += "\tpop ax\n";
 		result += "\tcmp ax, 0\n";
-		result += "\tje"+label+"\n";
+		result += "\tje "+label+"\n";
 		result += "\n";
 
 	}
 
 	@Override
-	public void iffaux(int label) {
+	public void iffaux(String label) {
 		result += "; iffaux\n";
 		result += "\tpop ax\n";
-		result += "\tcmp ax, "+bool_false+"\n";
-		result += "\tje"+label+"\n";
+		result += "\tcmp ax, "+Integer.toString(FALSE)+"\n";
+		result += "\tje "+label+"\n";
 		result += "\n";
 	}
 
 	@Override
-	public void jump(int label) {
+	public void jump(String label) {
 		result += "; jump "+label+"\n";
 		result += "\tjmp "+label+"\n";
 		result += "\n";

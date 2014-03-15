@@ -11,7 +11,7 @@ public class Writer {
 	// Quitte l'exécution et affiche une erreur
 	private static void error(IOException e) {
 		System.err.println(e.getMessage());
-		System.err.println("Erreur fatale lors de l'écriture dans un fichier");
+		System.err.println("Erreur fatale lors de l'ecriture dans un fichier\n");
 		System.exit(1);
 	}
 
