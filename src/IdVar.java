@@ -13,7 +13,18 @@ public class IdVar extends Ident {
 			this.type = type;
 		}
 
+		public boolean isVar() {
+			return true ;			
+		}
 
+		public boolean isConst() {
+			return false ;			
+		}
+		
+		public Object getValue() {
+			return offset ;	
+		}
+		
 		/**
 		 *  Retourne une variable sous forme de chaine
 		 */

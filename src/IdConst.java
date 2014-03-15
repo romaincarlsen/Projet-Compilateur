@@ -13,7 +13,18 @@ public class IdConst extends Ident {
 			this.type = type;
 		}
 
+		public boolean isVar() {
+			return false ;			
+		}
 
+		public boolean isConst() {
+			return true ;			
+		}		
+		
+		public Object getValue() {
+			return value ;			
+		}		
+		
 		/**
 		 *  Retourne une constante sous forme de chaine
 		 */

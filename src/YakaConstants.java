@@ -35,63 +35,65 @@ public interface YakaConstants {
   /** RegularExpression Id. */
   int NON = 20;
   /** RegularExpression Id. */
-  int BOOLEEN = 21;
+  int ERROR = 21;
   /** RegularExpression Id. */
-  int VAR = 22;
+  int BOOLEEN = 22;
   /** RegularExpression Id. */
-  int FAIRE = 23;
+  int VAR = 23;
   /** RegularExpression Id. */
-  int SINON = 24;
+  int FAIRE = 24;
   /** RegularExpression Id. */
-  int POUR = 25;
+  int SINON = 25;
   /** RegularExpression Id. */
-  int SI = 26;
+  int POUR = 26;
   /** RegularExpression Id. */
-  int FSI = 27;
+  int SI = 27;
   /** RegularExpression Id. */
-  int ENTIER = 28;
+  int FSI = 28;
   /** RegularExpression Id. */
-  int RETOURNE = 29;
+  int ENTIER = 29;
   /** RegularExpression Id. */
-  int VRAI = 30;
+  int RETOURNE = 30;
   /** RegularExpression Id. */
-  int TANTQUE = 31;
+  int VRAI = 31;
   /** RegularExpression Id. */
-  int CONST = 32;
+  int TANTQUE = 32;
   /** RegularExpression Id. */
-  int FAUX = 33;
+  int CONST = 33;
   /** RegularExpression Id. */
-  int FAIT = 34;
+  int FAUX = 34;
   /** RegularExpression Id. */
-  int FONCTION = 35;
+  int FAIT = 35;
   /** RegularExpression Id. */
-  int FFONCTION = 36;
+  int FONCTION = 36;
   /** RegularExpression Id. */
-  int PROGRAMME = 37;
+  int FFONCTION = 37;
   /** RegularExpression Id. */
-  int FPROGRAMME = 38;
+  int PROGRAMME = 38;
   /** RegularExpression Id. */
-  int PRINCIPAL = 39;
+  int FPROGRAMME = 39;
   /** RegularExpression Id. */
-  int FPRINCIPAL = 40;
+  int PRINCIPAL = 40;
   /** RegularExpression Id. */
-  int ALORS = 41;
+  int FPRINCIPAL = 41;
   /** RegularExpression Id. */
-  int ECRIRE = 42;
+  int ALORS = 42;
   /** RegularExpression Id. */
-  int LIRE = 43;
+  int ECRIRE = 43;
   /** RegularExpression Id. */
-  int ALALIGNE = 44;
+  int LIRE = 44;
   /** RegularExpression Id. */
-  int chiffre = 45;
+  int ALALIGNE = 45;
   /** RegularExpression Id. */
-  int entier = 46;
+  int chiffre = 46;
   /** RegularExpression Id. */
   int lettre = 47;
   /** RegularExpression Id. */
-  int ident = 48;
+  int entier = 48;
   /** RegularExpression Id. */
-  int chaine = 49;
+  int ident = 49;
+  /** RegularExpression Id. */
+  int chaine = 50;
 
   /** Lexical state. */
   int DEFAULT = 0;
@@ -121,6 +123,7 @@ public interface YakaConstants {
     "\"ET\"",
     "\"OU\"",
     "\"NON\"",
+    "\"error\"",
     "\"BOOLEEN\"",
     "\"VAR\"",
     "\"FAIRE\"",
@@ -146,8 +149,8 @@ public interface YakaConstants {
     "\"LIRE\"",
     "\"ALALIGNE\"",
     "<chiffre>",
-    "<entier>",
     "<lettre>",
+    "<entier>",
     "<ident>",
     "<chaine>",
     "\",\"",

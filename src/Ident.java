@@ -1,6 +1,9 @@
 
 public abstract class Ident {
 		
+	
+		public final static String TRUE = "-1";
+		public final static String FALSE = "0";
 		// Type de l'Ident
 		public String type;
 
@@ -11,8 +14,13 @@ public abstract class Ident {
 		public Ident() {
 			
 		}
+		
+		public abstract boolean isVar() ;
 
-
+		public abstract boolean isConst() ;
+		
+		public abstract Object getValue() ;		
+		
 		/**
 		 *  Retourne un identifiant sous forme de chaine
 		 */

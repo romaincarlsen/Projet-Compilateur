@@ -1,9 +1,9 @@
 
-public class YVMasm implements YVM {
-	
-	private String result = "";
-	private String bool_true = "-1";
-	private String bool_false = "0";
+public class YVMasm extends YVM {
+
+	public YVMasm(String filename) {
+		super(filename);
+	}
 
 	@Override
 	public void entete() {
@@ -114,7 +114,7 @@ public class YVMasm implements YVM {
 		result += "\tjmp $+2\n";
 		result += "\tpush "+bool_false+"\n";*/
 		result += "\n";
-		
+
 	}
 
 	@Override
@@ -245,7 +245,7 @@ public class YVMasm implements YVM {
 		result += "\tcmp ax, 0\n";
 		result += "\tje"+label+"\n";
 		result += "\n";
-		
+
 	}
 
 	@Override
@@ -271,6 +271,6 @@ public class YVMasm implements YVM {
 		result += "\tsub sp, "+slot+"\n";
 		result += "\n";
 	}
-	
+
 }
 

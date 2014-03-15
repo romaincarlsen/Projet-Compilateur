@@ -42,8 +42,7 @@ public class IdentArray {
 		public static boolean has(String s) {
 			return identArray.containsKey(s);
 		}
-		
-		
+				
 		/**
 		 *  Ajout d'un identifiant
 		 */
@@ -51,6 +50,14 @@ public class IdentArray {
 			identArray.put(s, i);
 		}
 		
+		
+		public static int nbVar() {
+			int nb = 0 ;
+			for(String key : identArray.keySet())
+				if (identArray.get(key).isVar())
+					nb++ ;
+			return nb*2 ;
+		}
 		
 		/**
 		 *  Ajout d'un identifiant
