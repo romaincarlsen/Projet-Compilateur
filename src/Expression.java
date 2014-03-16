@@ -7,8 +7,6 @@ public class Expression {
 	private static LinkedList<String> operatorStack = new LinkedList<String>();
 	private static LinkedList<String> typeStack = new LinkedList<String>();
 
-	// Pile des tokens (utile pour afficher une erreur)
-	private static LinkedList<String> tokenStack = new LinkedList<String>();
 
 	/**
 	 *  Constructeur
@@ -16,6 +14,7 @@ public class Expression {
 	public Expression() {
 
 	}
+
 
 	/**
 	 *  Calcul l'expression
@@ -32,25 +31,26 @@ public class Expression {
 		return null;
 	}
 
+
 	public static void addType(String val) {
 		typeStack.push(val);
 	}
+
 
 	public static void addOperator(String val) {
 		operatorStack.push(val) ;
 	}
 
-	public static void addToken(String val) {
-		tokenStack.push(val) ;
-	}
 
 	public static String popType() {
 		return typeStack.pop() ;
 	}
 
+
 	public static String popOperator() {
 		return operatorStack.pop() ;
 	}
+
 
 	public static String binExprReturn(String t1, String t2, String op) {
 		String ent = YakaConstants.tokenImage[YakaConstants.ENTIER] ;
@@ -68,6 +68,7 @@ public class Expression {
 		String diff = YakaConstants.tokenImage[YakaConstants.DIFF] ;
 		String et = YakaConstants.tokenImage[YakaConstants.ET] ;
 		String ou = YakaConstants.tokenImage[YakaConstants.OU] ;
+
 		if (op == plus || op == moins || op == mul || op == div) {
 			if (t1==ent && t2==ent)
 				return ent ;
@@ -92,13 +93,16 @@ public class Expression {
 			else
 				return err ;
 		}
+
 		return err ;
 	}
+
 
 	public static String unExprReturn(String t, String op) {
 		String ent = YakaConstants.tokenImage[YakaConstants.ENTIER] ;
 		String bool = YakaConstants.tokenImage[YakaConstants.BOOLEEN] ;
 		String err = YakaConstants.tokenImage[YakaConstants.ERROR] ;
+
 		if (op == YakaConstants.tokenImage[YakaConstants.MOINS]) {
 			if (t==ent)
 				return ent ;
@@ -111,24 +115,8 @@ public class Expression {
 			else
 				return err ;
 		}
+
 		return err ;
-	}
-
-
-	public static String getCurrentExpression() {
-		String token1 = tokenStack.get(tokenStack.size() - 2);
-		String operator = operatorStack.get(operatorStack.size() - 1);
-		String token2 = tokenStack.get(tokenStack.size() - 1);
-
-		return token1+" "+operator+" "+token2;
-	}
-
-
-	public static String getCurrentSingleExpression() {
-		String operator = tokenStack.get(tokenStack.size() - 1);
-		String token = operatorStack.get(operatorStack.size() - 1);
-
-		return operator+" "+token;
 	}
 
 
@@ -146,6 +134,4 @@ public class Expression {
 		return s ;
 	}
 
-
 }
-
