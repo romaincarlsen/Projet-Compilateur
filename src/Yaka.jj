@@ -219,7 +219,7 @@ void bloc() : {} {
 		Yaka.Interpreter.ouvrePrinc(IdentArray.nbVar());
 		//Yaka.result += "\nouvrePrinc "+ IdentArray.nbVar() ;
 	}
-	suiteExpr()
+	suiteInstr()
 }
 
 
@@ -320,14 +320,56 @@ void type() :{} {
 /**
  * Syntaxe des instructions
  */
-void suiteExpr() : {} {
-	(
-		expression()
-		( ";" (expression())? )*
-	)?
+void suiteInstr() : {} {
+	
+		instruction()
+		( ";" (instruction())? )*
+	
 }
 
+void instruction() : {} {
+	affectation() |
+	lecture()|
+	ecriture()
+}
 
+void affectation() : {} {
+	(<ident>){	try{	
+		
+				if (IdentArray.get(YakaTokenManager.identLu).isVar()) 
+					{int saveoffset = IdentArray.get(YakaTokenManager.identLu).getValue();}
+				else
+					throw new ParseException("Affectation impossible sur une constante");
+					}
+			catch(ParseException e) {
+				TokenMgrError error = new TokenMgrError(
+					"Erreur d'affectation, ligne "+YakaTokenManager.currentLine+" :\n"+e.getMessage(),
+					TokenMgrError.LEXICAL_ERROR
+				);
+				Writer.errorln(error.getMessage());
+			}
+	
+	} 
+	<EGAL> expression(){Yaka.Interpreter.affect(saveoffset);}
+	
+}
+
+void lecture() : {} {
+	<LIRE>"("<ident>")"{Yaka.Interpreter.lireEnt();
+	}
+}
+
+void ecriture() : {} {
+	{boolean chaine;
+	String s="";}
+	<ECRIRE>"("(expression(){Yaka.Interpreter.ecrireEnt();
+				chaine = false;}
+		|<chaine>{	chaine = true;
+				s +=chaineLue;}
+	")"{if chaine = true Yaka.Interpreter.ecrireChaine(s)};
+		|
+	<ALALIGNE>{Yaka.Interpreter.aLaLigne();
+}
 /**
  * Expression
  */
@@ -355,7 +397,7 @@ void expression() : {} {
 				String res = Expression.binExprReturn(t1,t2,op);
 
 				if(res == tokenImage[ERROR])
-					throw new ParseException("Operatio de type "+t1+" "+op+" "+t2+" interdite");
+					throw new ParseException("Operation de type "+t1+" "+op+" "+t2+" interdite");
 
 				else {
 					Expression.addType(res);
