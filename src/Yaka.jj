@@ -203,12 +203,10 @@ TOKEN  : {
 void analyse() : {} {
 	<PROGRAMME> <ident>{
 		Yaka.Interpreter.entete();
-		//Yaka.result += "entete" ;
 	}
 	bloc()
 	<FPROGRAMME>{
 		Yaka.Interpreter.queue();
-		//Yaka.result += "\nqueue" ;
 	}
 }
 
@@ -217,7 +215,6 @@ void bloc() : {} {
 	(declConst())*
 	(declVar())* {
 		Yaka.Interpreter.ouvrePrinc(IdentArray.nbVar());
-		//Yaka.result += "\nouvrePrinc "+ IdentArray.nbVar() ;
 	}
 	suiteInstr()
 }
@@ -321,11 +318,10 @@ void type() :{} {
  * Syntaxe des instructions
  */
 void suiteInstr() : {} {
-	
-		instruction()
-		( ";" (instruction())? )*
-	
+	instruction()
+	( ";" (instruction())? )*
 }
+
 
 void instruction() : {} {
 	affectation() |
@@ -333,43 +329,56 @@ void instruction() : {} {
 	ecriture()
 }
 
-void affectation() : {} {
-	(<ident>){	try{	
-		
-				if (IdentArray.get(YakaTokenManager.identLu).isVar()) 
-					{int saveoffset = IdentArray.get(YakaTokenManager.identLu).getValue();}
-				else
-					throw new ParseException("Affectation impossible sur une constante");
-					}
-			catch(ParseException e) {
-				TokenMgrError error = new TokenMgrError(
-					"Erreur d'affectation, ligne "+YakaTokenManager.currentLine+" :\n"+e.getMessage(),
-					TokenMgrError.LEXICAL_ERROR
-				);
-				Writer.errorln(error.getMessage());
-			}
-	
-	} 
-	<EGAL> expression(){Yaka.Interpreter.affect(saveoffset);}
-	
-}
 
-void lecture() : {} {
-	<LIRE>"("<ident>")"{Yaka.Interpreter.lireEnt();
+void affectation() : {} {
+	(<ident>) {
+		Ident affectId = IdentArray.get(YakaTokenManager.identLu);
+		try {
+			if(affectId.isConst())
+				throw new ParseException("Affectation impossible sur une constante");
+		}
+		catch(ParseException e) {
+			TokenMgrError error = new TokenMgrError(
+				"Erreur d'affectation, ligne "+YakaTokenManager.currentLine+" :\n"+e.getMessage(),
+				TokenMgrError.LEXICAL_ERROR
+			);
+			Writer.errorln(error.getMessage());
+		}
+
+	}
+	(<EGAL> expression()) {
+		Yaka.Interpreter.affect(affectId);
 	}
 }
 
-void ecriture() : {} {
-	{boolean chaine;
-	String s="";}
-	<ECRIRE>"("(expression(){Yaka.Interpreter.ecrireEnt();
-				chaine = false;}
-		|<chaine>{	chaine = true;
-				s +=chaineLue;}
-	")"{if chaine = true Yaka.Interpreter.ecrireChaine(s)};
-		|
-	<ALALIGNE>{Yaka.Interpreter.aLaLigne();
+
+void lecture() : {} {
+	(<LIRE>"("<ident>")") {
+		Yaka.Interpreter.lireEnt(IdentArray.get(YakaTokenManager.identLu));
+	}
 }
+
+
+void ecriture() : {} {
+
+	(<ECRIRE>"("
+
+		expression() {
+			// Todo
+			Yaka.Interpreter.ecrireEnt(null);
+		}
+		| <chaine> {
+			Yaka.Interpreter.ecrireChaine(YakaTokenManager.chaineLue);
+		}
+
+	")")
+
+	| (<ALALIGNE>) {
+		Yaka.Interpreter.aLaLigne();
+	}
+}
+
+
 /**
  * Expression
  */
@@ -401,36 +410,27 @@ void expression() : {} {
 
 				else {
 					Expression.addType(res);
-					//String s = "" ;
 
 					if (op == inf)
 						Yaka.Interpreter.iinf();
-						//s = "\niinf ";
 
 					else if (op == infegal)
 						Yaka.Interpreter.iinfegal();
-						//s = "\niinfegal ";
 
 					else if (op == sup)
 						Yaka.Interpreter.isup();
-						//s = "\nisup ";
 
 					else if (op == supegal)
 						Yaka.Interpreter.isupegal();
-						//s = "\nisupegal ";
 
 					else if (op == egal)
 						Yaka.Interpreter.iegal();
-						//s = "\niegal ";
 
 					else if (op == diff)
 						Yaka.Interpreter.idiff();
-						//s = "\nidiff ";
 
 					else
 						throw new ParseException("Operateur "+op+" innatendu");
-
-					//Yaka.result += s;
 				}
 			}
 			catch(ParseException e) {
@@ -470,24 +470,18 @@ void simpleExpr() : {} {
 
 				else {
 					Expression.addType(res);
-					//String s = "";
 
 					if(op == plus)
 						Yaka.Interpreter.iadd();
-						//s = "\niadd ";
 
 					else if (op == moins)
 						Yaka.Interpreter.isub();
-						//s = "\nisub ";
 
 					else if (op == ou)
 						Yaka.Interpreter.ior();
-						//s = "\nior ";
 
 					else
 						throw new ParseException("Operateur "+op+" innatendu");
-
-					//Yaka.result += s;
 				}
 			}
 			catch(ParseException e) {
@@ -527,24 +521,18 @@ void terme() : {} {
 
 				else {
 					Expression.addType(res);
-					//String s = "";
 
 					if (op == mul)
 						Yaka.Interpreter.imul();
-						//s = "\nimul ";
 
 					else if (op == div)
 						Yaka.Interpreter.idiv();
-						//s = "\nidiv ";
 
 					else if(op == et)
 						Yaka.Interpreter.iand();
-						//s = "\niand ";
 
 					else
 						throw new ParseException("Operateur "+op+" innatendu");
-
-					//Yaka.result += s;
 				}
 			}
 			catch(ParseException e) {
@@ -576,20 +564,15 @@ void facteur() : {} {
 
 			else {
 				Expression.addType(res);
-				//String s = "";
 
 				if(op == tokenImage[MOINS])
 					Yaka.Interpreter.ineg();
-					//s = "\nineg ";
 
 				else if(op == tokenImage[NON])
 					Yaka.Interpreter.inot();
-					//s = "\ninot ";
 
 				else
 					throw new ParseException("Operateur "+op+" innatendu");
-
-				//Yaka.result += s ;
 			}
 		}
 		catch(ParseException e) {
@@ -614,7 +597,6 @@ void valeur () : {} {
 	<entier> {
 		Expression.addType(tokenImage[ENTIER]);
 		Yaka.Interpreter.iconst(YakaTokenManager.entierLu);
-		//Yaka.result += "\niconst " + YakaTokenManager.entierLu ;
 	}
 
 	| <ident> {
@@ -623,24 +605,19 @@ void valeur () : {} {
 
 		if(id.isVar())
 			Yaka.Interpreter.iload(id.getValue());
-			//Yaka.result += "\niload " ;
+
 		else if(id.isConst())
 			Yaka.Interpreter.iconst(id.getValue());
-			//Yaka.result += "\niconst " ;
-
-		//Yaka.result += id.getValue() ;
 	}
 
 	| <VRAI> 	{
 		Expression.addType(tokenImage[BOOLEEN]);
 		Yaka.Interpreter.iconst(Yaka.Interpreter.TRUE);
-		//Yaka.result += "\niconst " + Ident.TRUE ;
 	}
 
 	| <FAUX> 	{
 		Expression.addType(tokenImage[BOOLEEN]);
 		Yaka.Interpreter.iconst(Yaka.Interpreter.FALSE);
-		//Yaka.result += "\niconst " + Ident.FALSE ;
 	}
 
 }

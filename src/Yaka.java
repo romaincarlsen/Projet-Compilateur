@@ -89,13 +89,9 @@
     jj_consume_token(PROGRAMME);
     jj_consume_token(ident);
                 Yaka.Interpreter.entete();
-                //Yaka.result += "entete" ;
-
     bloc();
     jj_consume_token(FPROGRAMME);
                 Yaka.Interpreter.queue();
-                //Yaka.result += "\nqueue" ;
-
   }
 
   static final public void bloc() throws ParseException {
@@ -124,8 +120,6 @@
       declVar();
     }
                 Yaka.Interpreter.ouvrePrinc(IdentArray.nbVar());
-                //Yaka.result += "\nouvrePrinc "+ IdentArray.nbVar() ;
-
     suiteInstr();
   }
 
@@ -267,6 +261,7 @@
       case LIRE:
       case ALALIGNE:
       case ident:
+      case chaine:
         instruction();
         break;
       default:
@@ -286,6 +281,7 @@
       break;
     case ECRIRE:
     case ALALIGNE:
+    case chaine:
       ecriture();
       break;
     default:
@@ -297,8 +293,21 @@
 
   static final public void affectation() throws ParseException {
     jj_consume_token(ident);
+                Ident affectId = IdentArray.get(YakaTokenManager.identLu);
+                try {
+                        if(affectId.isConst())
+                                {if (true) throw new ParseException("Affectation impossible sur une constante");}
+                }
+                catch(ParseException e) {
+                        TokenMgrError error = new TokenMgrError(
+                                "Erreur d'affectation, ligne "+YakaTokenManager.currentLine+" :\u005cn"+e.getMessage(),
+                                TokenMgrError.LEXICAL_ERROR
+                        );
+                        Writer.errorln(error.getMessage());
+                }
     jj_consume_token(EGAL);
     expression();
+                Yaka.Interpreter.affect(affectId);
   }
 
   static final public void lecture() throws ParseException {
@@ -306,35 +315,35 @@
     jj_consume_token(53);
     jj_consume_token(ident);
     jj_consume_token(54);
+                Yaka.Interpreter.lireEnt(IdentArray.get(YakaTokenManager.identLu));
   }
 
   static final public void ecriture() throws ParseException {
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case ECRIRE:
-      jj_consume_token(ECRIRE);
-      jj_consume_token(53);
+    case chaine:
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case MOINS:
-      case NON:
-      case VRAI:
-      case FAUX:
-      case entier:
-      case ident:
-      case 53:
+      case ECRIRE:
+        jj_consume_token(ECRIRE);
+        jj_consume_token(53);
         expression();
+                        // Todo
+                        Yaka.Interpreter.ecrireEnt(null);
         break;
       case chaine:
         jj_consume_token(chaine);
+                        Yaka.Interpreter.ecrireChaine(YakaTokenManager.chaineLue);
+        jj_consume_token(54);
         break;
       default:
         jj_la1[9] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
-      jj_consume_token(54);
       break;
     case ALALIGNE:
       jj_consume_token(ALALIGNE);
+                Yaka.Interpreter.aLaLigne();
       break;
     default:
       jj_la1[10] = jj_gen;
@@ -373,40 +382,31 @@
                                 String res = Expression.binExprReturn(t1,t2,op);
 
                                 if(res == tokenImage[ERROR])
-                                        {if (true) throw new ParseException("Operatio de type "+t1+" "+op+" "+t2+" interdite");}
+                                        {if (true) throw new ParseException("Operation de type "+t1+" "+op+" "+t2+" interdite");}
 
                                 else {
                                         Expression.addType(res);
-                                        //String s = "" ;
 
                                         if (op == inf)
                                                 Yaka.Interpreter.iinf();
-                                                //s = "\niinf ";
 
                                         else if (op == infegal)
                                                 Yaka.Interpreter.iinfegal();
-                                                //s = "\niinfegal ";
 
                                         else if (op == sup)
                                                 Yaka.Interpreter.isup();
-                                                //s = "\nisup ";
 
                                         else if (op == supegal)
                                                 Yaka.Interpreter.isupegal();
-                                                //s = "\nisupegal ";
 
                                         else if (op == egal)
                                                 Yaka.Interpreter.iegal();
-                                                //s = "\niegal ";
 
                                         else if (op == diff)
                                                 Yaka.Interpreter.idiff();
-                                                //s = "\nidiff ";
 
                                         else
                                                 {if (true) throw new ParseException("Operateur "+op+" innatendu");}
-
-                                        //Yaka.result += s;
                                 }
                         }
                         catch(ParseException e) {
@@ -456,24 +456,18 @@
 
                                 else {
                                         Expression.addType(res);
-                                        //String s = "";
 
                                         if(op == plus)
                                                 Yaka.Interpreter.iadd();
-                                                //s = "\niadd ";
 
                                         else if (op == moins)
                                                 Yaka.Interpreter.isub();
-                                                //s = "\nisub ";
 
                                         else if (op == ou)
                                                 Yaka.Interpreter.ior();
-                                                //s = "\nior ";
 
                                         else
                                                 {if (true) throw new ParseException("Operateur "+op+" innatendu");}
-
-                                        //Yaka.result += s;
                                 }
                         }
                         catch(ParseException e) {
@@ -519,24 +513,18 @@
 
                                 else {
                                         Expression.addType(res);
-                                        //String s = "";
 
                                         if (op == mul)
                                                 Yaka.Interpreter.imul();
-                                                //s = "\nimul ";
 
                                         else if (op == div)
                                                 Yaka.Interpreter.idiv();
-                                                //s = "\nidiv ";
 
                                         else if(op == et)
                                                 Yaka.Interpreter.iand();
-                                                //s = "\niand ";
 
                                         else
                                                 {if (true) throw new ParseException("Operateur "+op+" innatendu");}
-
-                                        //Yaka.result += s;
                                 }
                         }
                         catch(ParseException e) {
@@ -574,20 +562,15 @@
 
                         else {
                                 Expression.addType(res);
-                                //String s = "";
 
                                 if(op == tokenImage[MOINS])
                                         Yaka.Interpreter.ineg();
-                                        //s = "\nineg ";
 
                                 else if(op == tokenImage[NON])
                                         Yaka.Interpreter.inot();
-                                        //s = "\ninot ";
 
                                 else
                                         {if (true) throw new ParseException("Operateur "+op+" innatendu");}
-
-                                //Yaka.result += s ;
                         }
                 }
                 catch(ParseException e) {
@@ -631,8 +614,6 @@
       jj_consume_token(entier);
                 Expression.addType(tokenImage[ENTIER]);
                 Yaka.Interpreter.iconst(YakaTokenManager.entierLu);
-                //Yaka.result += "\niconst " + YakaTokenManager.entierLu ;
-
       break;
     case ident:
       jj_consume_token(ident);
@@ -641,27 +622,19 @@
 
                 if(id.isVar())
                         Yaka.Interpreter.iload(id.getValue());
-                        //Yaka.result += "\niload " ;
+
                 else if(id.isConst())
                         Yaka.Interpreter.iconst(id.getValue());
-                        //Yaka.result += "\niconst " ;
-
-                //Yaka.result += id.getValue() ;
-
       break;
     case VRAI:
       jj_consume_token(VRAI);
                 Expression.addType(tokenImage[BOOLEEN]);
                 Yaka.Interpreter.iconst(Yaka.Interpreter.TRUE);
-                //Yaka.result += "\niconst " + Ident.TRUE ;
-
       break;
     case FAUX:
       jj_consume_token(FAUX);
                 Expression.addType(tokenImage[BOOLEEN]);
                 Yaka.Interpreter.iconst(Yaka.Interpreter.FALSE);
-                //Yaka.result += "\niconst " + Ident.FALSE ;
-
       break;
     default:
       jj_la1[16] = jj_gen;
@@ -780,10 +753,10 @@
       jj_la1_init_1();
    }
    private static void jj_la1_init_0() {
-      jj_la1_0 = new int[] {0x0,0x800000,0x0,0x80000000,0x0,0x20400000,0x0,0x0,0x0,0x80100200,0x0,0x3f000,0x80300,0x40c00,0x80100200,0x80000000,0x80000000,0x3f000,0x80300,0x40c00,0x100200,};
+      jj_la1_0 = new int[] {0x0,0x800000,0x0,0x80000000,0x0,0x20400000,0x0,0x0,0x0,0x0,0x0,0x3f000,0x80300,0x40c00,0x80100200,0x80000000,0x80000000,0x3f000,0x80300,0x40c00,0x100200,};
    }
    private static void jj_la1_init_1() {
-      jj_la1_1 = new int[] {0x2,0x0,0x80000,0x30004,0x80000,0x0,0x100000,0x23800,0x23800,0x270004,0x2800,0x0,0x0,0x0,0x230004,0x230004,0x30004,0x0,0x0,0x0,0x0,};
+      jj_la1_1 = new int[] {0x2,0x0,0x80000,0x30004,0x80000,0x0,0x100000,0x63800,0x63800,0x40800,0x42800,0x0,0x0,0x0,0x230004,0x230004,0x30004,0x0,0x0,0x0,0x0,};
    }
 
   /** Constructor with InputStream. */

@@ -1,275 +1,352 @@
 
 public class YVMasm extends YVM {
 
+	private String data = "";
+	private int dataCpt = 0;
+
+
+	// Création d'un nouveau fichier pour l'enregistrement de la compilation
 	public YVMasm(String filename) {
 		super(filename);
 	}
 
+
+
+	// Fonction de sauvegarde du résulat dans le fichier de sortie
+	@Override
+	public void outputSave() {
+		Writer.write(script, header+data+code+footer);
+		Writer.close(script);
+	}
+
+
+
+	// Instructions début/fin
 	@Override
 	public void entete() {
-		result += "; entete\n";
-		result += ".MODEL SMALL\n";
-		result += "\t.586\n";
-		result += "\n";
-		result += ".CODE\n";
-		result += "debut:\n";
-		result += " \tSTARTUPCODE\n";
-		result += "\n";
+		header += "; entete\n";
+		header += ".MODEL SMALL\n";
+		header += "\t.586\n";
+		header += "\n";
+		code += ".CODE\n";
+		code += "debut:\n";
+		code += " \tSTARTUPCODE\n";
+		code += "\n";
 	}
 
 	@Override
 	public void queue() {
-		result += "; queue\n";
-		result += "\tnop\n";
-		result += "\texitcode\n";
-		result += "\tEND debut\n";
+		footer += "; queue\n";
+		footer += "\tnop\n";
+		footer += "\texitcode\n";
+		footer += "\tEND debut\n";
+	}
+
+
+
+	// Instructions arithmétiques
+	@Override
+	public void affect(Ident id) {
+		code += "; istore "+Integer.toString(id.getValue())+"\n";
+		code += "\tpop ax\n";
+		code += "\tmove word ptr [bp"+Integer.toString(id.getValue())+"], ax\n";
+		code += "\n";
 	}
 
 	@Override
 	public void iadd() {
-		result += "; iadd\n";
-		result += "\tpop bx\n";
-		result += "\tpop ax\n";
-		result += "\tadd ax, bx\n";
-		result += "\tpush ax\n";
-		result += "\n";
+		code += "; iadd\n";
+		code += "\tpop bx\n";
+		code += "\tpop ax\n";
+		code += "\tadd ax, bx\n";
+		code += "\tpush ax\n";
+		code += "\n";
 	}
 
 	@Override
 	public void isub() {
-		result += "; isub\n";
-		result += "\tpop bx\n";
-		result += "\tpop ax\n";
-		result += "\tsub ax, bx\n";
-		result += "\tpush ax\n";
-		result += "\n";
+		code += "; isub\n";
+		code += "\tpop bx\n";
+		code += "\tpop ax\n";
+		code += "\tsub ax, bx\n";
+		code += "\tpush ax\n";
+		code += "\n";
 	}
 
 	@Override
 	public void imul() {
-		result += "; imul\n";
-		result += "\tpop bx\n";
-		result += "\tpop ax\n";
-		result += "\timul bx\n";
-		result += "\tpush ax\n";
-		result += "\n";
+		code += "; imul\n";
+		code += "\tpop bx\n";
+		code += "\tpop ax\n";
+		code += "\timul bx\n";
+		code += "\tpush ax\n";
+		code += "\n";
 	}
 
 	@Override
 	public void idiv() {
-		result += "; idiv\n";
-		result += "\tpop bx\n";
-		result += "\tpop ax\n";
-		result += "\tcwd\n";
-		result += "\tidiv bx\n";
-		result += "\tpush ax\n";
-		result += "\n";
+		code += "; idiv\n";
+		code += "\tpop bx\n";
+		code += "\tpop ax\n";
+		code += "\tcwd\n";
+		code += "\tidiv bx\n";
+		code += "\tpush ax\n";
+		code += "\n";
 	}
 
 	@Override
 	public void inot() {
-		result += "; inot\n";
-		result += "\tpop ax\n";
-		result += "\tnot ax\n";
-		result += "\tpush ax\n";
-		/*result += "\tpop ax\n";
-		result += "\tcmp ax, "+Integer.toString(TRUE)+"\n";
-		result += "\tjne $+3\n";
-		result += "\tpush "+Integer.toString(FALSE)+"\n";
-		result += "\tjmp $+2\n";
-		result += "\tpush "+Integer.toString(TRUE)+"\n";*/
-		result += "\n";
+		code += "; inot\n";
+		code += "\tpop ax\n";
+		code += "\tnot ax\n";
+		code += "\tpush ax\n";
+		/*code += "\tpop ax\n";
+		code += "\tcmp ax, "+Integer.toString(TRUE)+"\n";
+		code += "\tjne $+3\n";
+		code += "\tpush "+Integer.toString(FALSE)+"\n";
+		code += "\tjmp $+2\n";
+		code += "\tpush "+Integer.toString(TRUE)+"\n";*/
+		code += "\n";
 	}
 
 	@Override
 	public void ineg() {
-		result += "; ineg\n";
-		result += "\tpop ax\n";
-		result += "\tneg ax\n";
-		result += "\tpush ax\n";
-		/*result += "\tpop bx\n";
-		result += "\tpush -1\n";
-		result += "\timul bx\n";
-		result += "\tpush ax\n";*/
-		result += "\n";
+		code += "; ineg\n";
+		code += "\tpop ax\n";
+		code += "\tneg ax\n";
+		code += "\tpush ax\n";
+		/*code += "\tpop bx\n";
+		code += "\tpush -1\n";
+		code += "\timul bx\n";
+		code += "\tpush ax\n";*/
+		code += "\n";
 	}
 
 	@Override
 	public void ior() {
-		result += "; ior\n";
-		result += "\tpop bx\n";
-		result += "\tpop ax\n";
-		result += "\tor ax, bx\n";
-		result += "\tpush ax\n";
-		/*result += "\tpop ax\n";
-		result += "\tcmp ax, "+Integer.toString(TRUE)+"\n";
-		result += "\tjne $+3\n";
-		result += "\tpush "+Integer.toString(TRUE)+"\n";
-		result += "\tjmp $+7\n";
-		result += "\tpop ax\n";
-		result += "\tcmp ax, "+Integer.toString(TRUE)+"\n";
-		result += "\tjne $+3\n";
-		result += "\tpush "+Integer.toString(TRUE)+"\n";
-		result += "\tjmp $+2\n";
-		result += "\tpush "+Integer.toString(FALSE)+"\n";*/
-		result += "\n";
+		code += "; ior\n";
+		code += "\tpop bx\n";
+		code += "\tpop ax\n";
+		code += "\tor ax, bx\n";
+		code += "\tpush ax\n";
+		/*code += "\tpop ax\n";
+		code += "\tcmp ax, "+Integer.toString(TRUE)+"\n";
+		code += "\tjne $+3\n";
+		code += "\tpush "+Integer.toString(TRUE)+"\n";
+		code += "\tjmp $+7\n";
+		code += "\tpop ax\n";
+		code += "\tcmp ax, "+Integer.toString(TRUE)+"\n";
+		code += "\tjne $+3\n";
+		code += "\tpush "+Integer.toString(TRUE)+"\n";
+		code += "\tjmp $+2\n";
+		code += "\tpush "+Integer.toString(FALSE)+"\n";*/
+		code += "\n";
 
 	}
 
 	@Override
 	public void iand() {
-		result += "; iand\n";
-		result += "\tpop bx\n";
-		result += "\tpop ax\n";
-		result += "\tand ax, bx\n";
-		result += "\tpush ax\n";
-		/*result += "\tpop ax\n";
-		result += "\tcmp ax, "+Integer.toString(FALSE)+"\n";
-		result += "\tjne $+3\n";
-		result += "\tpush "+Integer.toString(FALSE)+"\n";
-		result += "\tjmp $+7\n";
-		result += "\tpop ax\n";
-		result += "\tcmp ax, "+Integer.toString(FALSE)+"\n";
-		result += "\tjne $+3\n";
-		result += "\tpush "+Integer.toString(FALSE)+"\n";
-		result += "\tjmp $+2\n";
-		result += "\tpush "+Integer.toString(TRUE)+"\n";*/
-		result += "\n";
+		code += "; iand\n";
+		code += "\tpop bx\n";
+		code += "\tpop ax\n";
+		code += "\tand ax, bx\n";
+		code += "\tpush ax\n";
+		/*code += "\tpop ax\n";
+		code += "\tcmp ax, "+Integer.toString(FALSE)+"\n";
+		code += "\tjne $+3\n";
+		code += "\tpush "+Integer.toString(FALSE)+"\n";
+		code += "\tjmp $+7\n";
+		code += "\tpop ax\n";
+		code += "\tcmp ax, "+Integer.toString(FALSE)+"\n";
+		code += "\tjne $+3\n";
+		code += "\tpush "+Integer.toString(FALSE)+"\n";
+		code += "\tjmp $+2\n";
+		code += "\tpush "+Integer.toString(TRUE)+"\n";*/
+		code += "\n";
 	}
 
+
+
+	// Instructions de comparaisons
 	@Override
 	public void iinf() {
-		result += "; iinf\n";
-		result += "\tpop bx\n";
-		result += "\tpop ax\n";
-		result += "\tcmp ax, bx\n";
-		result += "\tjge $+3\n";
-		result += "\tpush "+Integer.toString(TRUE)+"\n";
-		result += "\tjmp $+2\n";
-		result += "\tpush "+Integer.toString(FALSE)+"\n";
-		result += "\n";
+		code += "; iinf\n";
+		code += "\tpop bx\n";
+		code += "\tpop ax\n";
+		code += "\tcmp ax, bx\n";
+		code += "\tjge $+3\n";
+		code += "\tpush "+Integer.toString(TRUE)+"\n";
+		code += "\tjmp $+2\n";
+		code += "\tpush "+Integer.toString(FALSE)+"\n";
+		code += "\n";
 	}
 
 	@Override
 	public void isup() {
-		result += "; isup\n";
-		result += "\tpop bx\n";
-		result += "\tpop ax\n";
-		result += "\tcmp ax, bx\n";
-		result += "\tjle $+3\n";
-		result += "\tpush "+Integer.toString(TRUE)+"\n";
-		result += "\tjmp $+2\n";
-		result += "\tpush "+Integer.toString(FALSE)+"\n";
-		result += "\n";
+		code += "; isup\n";
+		code += "\tpop bx\n";
+		code += "\tpop ax\n";
+		code += "\tcmp ax, bx\n";
+		code += "\tjle $+3\n";
+		code += "\tpush "+Integer.toString(TRUE)+"\n";
+		code += "\tjmp $+2\n";
+		code += "\tpush "+Integer.toString(FALSE)+"\n";
+		code += "\n";
 	}
 
 	@Override
 	public void iinfegal() {
-		result += "; iinfegal\n";
-		result += "\tpop bx\n";
-		result += "\tpop ax\n";
-		result += "\tcmp ax, bx\n";
-		result += "\tjg $+3\n";
-		result += "\tpush "+Integer.toString(TRUE)+"\n";
-		result += "\tjmp $+2\n";
-		result += "\tpush "+Integer.toString(FALSE)+"\n";
-		result += "\n";
+		code += "; iinfegal\n";
+		code += "\tpop bx\n";
+		code += "\tpop ax\n";
+		code += "\tcmp ax, bx\n";
+		code += "\tjg $+3\n";
+		code += "\tpush "+Integer.toString(TRUE)+"\n";
+		code += "\tjmp $+2\n";
+		code += "\tpush "+Integer.toString(FALSE)+"\n";
+		code += "\n";
 	}
 
 	@Override
 	public void isupegal() {
-		result += "; isupegal\n";
-		result += "\tpop bx\n";
-		result += "\tpop ax\n";
-		result += "\tcmp ax, bx\n";
-		result += "\tjl $+3\n";
-		result += "\tpush "+Integer.toString(TRUE)+"\n";
-		result += "\tjmp $+2\n";
-		result += "\tpush "+Integer.toString(FALSE)+"\n";
-		result += "\n";
+		code += "; isupegal\n";
+		code += "\tpop bx\n";
+		code += "\tpop ax\n";
+		code += "\tcmp ax, bx\n";
+		code += "\tjl $+3\n";
+		code += "\tpush "+Integer.toString(TRUE)+"\n";
+		code += "\tjmp $+2\n";
+		code += "\tpush "+Integer.toString(FALSE)+"\n";
+		code += "\n";
 	}
 
 	@Override
 	public void iegal() {
-		result += "; iegal\n";
-		result += "\tpop bx\n";
-		result += "\tpop ax\n";
-		result += "\tcmp ax, bx\n";
-		result += "\tjne $+3\n";
-		result += "\tpush "+Integer.toString(TRUE)+"\n";
-		result += "\tjmp $+2\n";
-		result += "\tpush "+Integer.toString(FALSE)+"\n";
-		result += "\n";
+		code += "; iegal\n";
+		code += "\tpop bx\n";
+		code += "\tpop ax\n";
+		code += "\tcmp ax, bx\n";
+		code += "\tjne $+3\n";
+		code += "\tpush "+Integer.toString(TRUE)+"\n";
+		code += "\tjmp $+2\n";
+		code += "\tpush "+Integer.toString(FALSE)+"\n";
+		code += "\n";
 	}
 
 	@Override
 	public void idiff() {
-		result += "; idiff\n";
-		result += "\tpop bx\n";
-		result += "\tpop ax\n";
-		result += "\tcmp ax, bx\n";
-		result += "\tje $+3\n";
-		result += "\tpush "+Integer.toString(TRUE)+"\n";
-		result += "\tjmp $+2\n";
-		result += "\tpush "+Integer.toString(FALSE)+"\n";
-		result += "\n";
+		code += "; idiff\n";
+		code += "\tpop bx\n";
+		code += "\tpop ax\n";
+		code += "\tcmp ax, bx\n";
+		code += "\tje $+3\n";
+		code += "\tpush "+Integer.toString(TRUE)+"\n";
+		code += "\tjmp $+2\n";
+		code += "\tpush "+Integer.toString(FALSE)+"\n";
+		code += "\n";
 	}
 
+
+
+	// Instructions de stockage et de chargement
 	@Override
 	public void iload(int offset) {
-		result += "; iload "+offset+"\n";
-		result += "\tpush word ptr [bp"+offset+"]\n";
-		result += "\n";
+		code += "; iload "+offset+"\n";
+		code += "\tpush word ptr [bp"+offset+"]\n";
+		code += "\n";
 	}
 
 	@Override
 	public void istore(int offset) {
-		result += "; istore "+offset+"\n";
-		result += "\tpop ax\n";
-		result += "\tmov word ptr [bp"+offset+"], ax\n";
-		result += "\n";
+		code += "; istore "+offset+"\n";
+		code += "\tpop ax\n";
+		code += "\tmov word ptr [bp"+offset+"], ax\n";
+		code += "\n";
 	}
 
 	@Override
 	public void iconst(int valeur) {
-		result += "; iconst "+valeur+"\n";
-		result += "\tpush "+valeur+"\n";
-		result += "\n";
+		code += "; iconst "+valeur+"\n";
+		code += "\tpush "+valeur+"\n";
+		code += "\n";
 	}
 
+
+
+	// Instructions de controle de flot
 	@Override
 	public void ifeq(String label) {
-		result += "; ifeq\n";
-		result += "\tpop ax\n";
-		result += "\tcmp ax, 0\n";
-		result += "\tje "+label+"\n";
-		result += "\n";
+		code += "; ifeq\n";
+		code += "\tpop ax\n";
+		code += "\tcmp ax, 0\n";
+		code += "\tje "+label+"\n";
+		code += "\n";
 
 	}
 
 	@Override
 	public void iffaux(String label) {
-		result += "; iffaux\n";
-		result += "\tpop ax\n";
-		result += "\tcmp ax, "+Integer.toString(FALSE)+"\n";
-		result += "\tje "+label+"\n";
-		result += "\n";
+		code += "; iffaux\n";
+		code += "\tpop ax\n";
+		code += "\tcmp ax, "+Integer.toString(FALSE)+"\n";
+		code += "\tje "+label+"\n";
+		code += "\n";
 	}
 
 	@Override
 	public void jump(String label) {
-		result += "; jump "+label+"\n";
-		result += "\tjmp "+label+"\n";
-		result += "\n";
+		code += "; jump "+label+"\n";
+		code += "\tjmp "+label+"\n";
+		code += "\n";
 	}
 
+
+	// Instructions de pile
 	@Override
 	public void ouvrePrinc(int slot) {
-		result += "; ouvrePrinc "+slot+"\n";
-		result += "\tmov bp, sp\n";
-		result += "\tsub sp, "+slot+"\n";
-		result += "\n";
+		code += "; ouvrePrinc "+slot+"\n";
+		code += "\tmov bp, sp\n";
+		code += "\tsub sp, "+slot+"\n";
+		code += "\n";
+	}
+
+
+	// Insctructions d'écriture
+	public void ecrireChaine(String s) {
+		// Todo : faire un tableau des bibliothèques à charger (ne pas ajouter si déjà existant)
+
+		String msgName = "mess"+Integer.toString(dataCpt);
+		data += msgName+" DB \""+s+"$\"";
+		dataCpt++;
+
+		code += "; ecrireChaine \""+s+"\""+"\n";
+		code += "\tlea dx, "+msgName+"\n";
+		code += "\tpush dx\n";
+		code += "\tcall ecrch\n";
+		code += "\n";
+	}
+
+	public void ecrireEnt(Ident id) {
+		// Entier ou booléen
+		// Todo : faire un tableau des bibliothèques à charger (ne pas ajouter si déjà existant)
+
+		/*data += "mess"+Integer.toString(dataCpt)+" DB \""+s+"$\"";
+		dataCpt++;*/
+
+		code += "\t"+"iload "+id.getValue()+"\n";
+		code += "\t"+"ecrireEnt"+"\n";
+	}
+
+	public void aLaLigne() {
+		// Todo
+		code += "\t"+"aLaLigne"+"\n";
+	}
+
+
+	// Insctructions de lecture
+	public void lireEnt(Ident id) {
+		// Todo
+		code += "\t"+"lireEnt "+id.getValue()+"\n";
 	}
 
 }
-
