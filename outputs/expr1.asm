@@ -1,12 +1,10 @@
+; imports
+	extrn ecrent:proc
+	extrn ligsuiv:proc
+
 ; entete
-extrn lirent:proc, ecrent:proc
-extrn ecrbool:proc
-extrn ecrch:proc, ligsuiv:proc
 .MODEL SMALL
 	.586
-
-
-.DATA
 
 .CODE
 debut:
@@ -45,8 +43,10 @@ debut:
 	push word ptr [bp-10]
 
 	call ecrent
+
 ; aLaLigne
 	call ligsuiv
+
 ; iconst 2
 	push word ptr 2
 
@@ -87,6 +87,7 @@ debut:
 	push ax
 
 	call ecrent
+
 ; queue
 	nop
 	exitcode

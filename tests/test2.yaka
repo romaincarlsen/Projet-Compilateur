@@ -12,4 +12,3 @@ VAR ENTIER x, y, z;
 	z=(x+y/2)/5;
 	x=y+3*y-4;
 FPROGRAMME
-

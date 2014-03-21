@@ -1,7 +1,10 @@
 
+import java.util.ArrayList;
+
 public class YVMasm extends YVM {
 
-	private String data = "\n.DATA\n";
+	private ArrayList<String> data = new ArrayList<String>();
+	private ArrayList<String> libraries = new ArrayList<String>();
 	private int dataCpt = 0;
 
 
@@ -15,7 +18,26 @@ public class YVMasm extends YVM {
 	// Fonction de sauvegarde du résulat dans le fichier de sortie
 	@Override
 	public void outputSave() {
-		Writer.write(script, header+data+code+footer);
+
+		// On génère les données
+		String dataStr = "";
+		for(int i = 0; i < data.size(); i++) {
+			dataStr += data.get(i);
+		}
+		if(data.size() > 0) {
+			dataStr = ".DATA\n" + dataStr + "\n";
+		}
+
+		// On génère les imports de librairies
+		String librariesStr = "";
+		for(int i = 0; i < libraries.size(); i++) {
+			librariesStr += "\textrn "+libraries.get(i)+":proc\n";
+		}
+		if(libraries.size() > 0) {
+			librariesStr = "; imports\n" + librariesStr + "\n";
+		}
+
+		Writer.write(script, librariesStr+header+dataStr+code+footer);
 		Writer.close(script);
 	}
 
@@ -25,13 +47,10 @@ public class YVMasm extends YVM {
 	@Override
 	public void entete() {
 		header += "; entete\n";
-		header += "extrn lirent:proc, ecrent:proc\n";
-		header += "extrn ecrbool:proc\n";
-		header += "extrn ecrch:proc, ligsuiv:proc\n";
 		header += ".MODEL SMALL\n";
 		header += "\t.586\n";
 		header += "\n";
-		code += "\n.CODE\n";
+		code += ".CODE\n";
 		code += "debut:\n";
 		code += " \tSTARTUPCODE\n";
 		code += "\n";
@@ -105,9 +124,9 @@ public class YVMasm extends YVM {
 		code += "\tpush ax\n";
 		/*code += "\tpop ax\n";
 		code += "\tcmp ax, "+Integer.toString(TRUE)+"\n";
-		code += "\tjne $+3\n";
+		code += "\tjne $+6\n";
 		code += "\tpush "+Integer.toString(FALSE)+"\n";
-		code += "\tjmp $+2\n";
+		code += "\tjmp $+4\n";
 		code += "\tpush "+Integer.toString(TRUE)+"\n";*/
 		code += "\n";
 	}
@@ -134,14 +153,14 @@ public class YVMasm extends YVM {
 		code += "\tpush ax\n";
 		/*code += "\tpop ax\n";
 		code += "\tcmp ax, "+Integer.toString(TRUE)+"\n";
-		code += "\tjne $+3\n";
+		code += "\tjne $+6\n";
 		code += "\tpush "+Integer.toString(TRUE)+"\n";
-		code += "\tjmp $+7\n";
+		code += "\tjmp $+14\n";
 		code += "\tpop ax\n";
 		code += "\tcmp ax, "+Integer.toString(TRUE)+"\n";
-		code += "\tjne $+3\n";
+		code += "\tjne $+6\n";
 		code += "\tpush "+Integer.toString(TRUE)+"\n";
-		code += "\tjmp $+2\n";
+		code += "\tjmp $+4\n";
 		code += "\tpush "+Integer.toString(FALSE)+"\n";*/
 		code += "\n";
 
@@ -156,14 +175,14 @@ public class YVMasm extends YVM {
 		code += "\tpush ax\n";
 		/*code += "\tpop ax\n";
 		code += "\tcmp ax, "+Integer.toString(FALSE)+"\n";
-		code += "\tjne $+3\n";
+		code += "\tjne $+6\n";
 		code += "\tpush "+Integer.toString(FALSE)+"\n";
-		code += "\tjmp $+7\n";
+		code += "\tjmp $+14\n";
 		code += "\tpop ax\n";
 		code += "\tcmp ax, "+Integer.toString(FALSE)+"\n";
-		code += "\tjne $+3\n";
+		code += "\tjne $+6\n";
 		code += "\tpush "+Integer.toString(FALSE)+"\n";
-		code += "\tjmp $+2\n";
+		code += "\tjmp $+4\n";
 		code += "\tpush "+Integer.toString(TRUE)+"\n";*/
 		code += "\n";
 	}
@@ -318,42 +337,66 @@ public class YVMasm extends YVM {
 	public void ecrireChaine(String s) {
 		// Todo : faire un tableau des bibliothèques à charger (ne pas ajouter si déjà existant)
 
-		String msgName = "mess"+Integer.toString(dataCpt);
-		data += msgName+" DB \""+s+"$\"\n";
-		dataCpt++;
+		// Création du nom de variable messX
+		String msgName = "mess"+Integer.toString(data.size() + 1);
+
+		// On supprime les " en début et fin de chaine pour ne conserver que le contenu de la chaine
+		s = s.substring(1, s.length() - 1);
+
+		// On ajout la déclaration au tableaux des données
+		data.add("\t"+msgName+" DB \""+s+"$\"\n");
+
+		// On ajoute la librairie si elle n'est pas encore importé
+		String library = "ecrch";
+		if(!libraries.contains(library)) {
+			libraries.add(library);
+		}
 
 		code += "; ecrireChaine \""+s+"\""+"\n";
 		code += "\tlea dx, "+msgName+"\n";
 		code += "\tpush dx\n";
-		code += "\tcall ecrch\n";
+		code += "\tcall "+library+"\n";
 		code += "\n";
 	}
 
 	public void ecrireEnt() {
-		// Entier ou booléen
-		// Todo : faire un tableau des bibliothèques à charger (ne pas ajouter si déjà existant)
+		// Peut prendre un Entier ou un Booléen
 
-		/*data += "mess"+Integer.toString(dataCpt)+" DB \""+s+"$\"";
-		dataCpt++;*/
+		String library = "ecrent";
+		if(!libraries.contains(library)) {
+			libraries.add(library);
+		}
 
-		//code += "\t"+"iload "+id.getValue()+"\n";
-		code += "\t"+"call ecrent"+"\n";
+		code += "\t"+"call "+library+"\n";
+		code += "\n";
 	}
 
 	public void aLaLigne() {
-		// Todo
+
+		String library = "ligsuiv";
+		if(!libraries.contains(library)) {
+			libraries.add(library);
+		}
+
 		code += "; "+"aLaLigne"+"\n";
-		code += "\tcall ligsuiv\n";
+		code += "\t"+"call "+library+"\n";
+		code += "\n";
 	}
 
 
 	// Insctructions de lecture
 	public void lireEnt(Ident id) {
-		// Todo
+
+		String library = "lirent";
+		if(!libraries.contains(library)) {
+			libraries.add(library);
+		}
+
 		code += "; "+"lireEnt "+id.getValue()+"\n";
 		code += "\tlea dx,[bp"+id.getValue()+"]\n";
 		code += "\tpush dx\n";
-		code += "\tcall lirent\n";
+		code += "\t"+"call "+library+"\n";
+		code += "\n";
 	}
 
 }

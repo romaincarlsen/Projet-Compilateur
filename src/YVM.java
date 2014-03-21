@@ -145,6 +145,7 @@ public class YVM {
 
 	// Insctructions d'écriture
 	public void ecrireChaine(String s) {
+		s = s.substring(1, s.length() - 1);
 		code += "\t"+"ecrireChaine \""+s+"\""+"\n";
 	}
 

@@ -11,4 +11,3 @@ VAR BOOLEEN b1, b2;
 	c2=-5 ;
 	b2=(c1<=(c2+4));
 FPROGRAMME
-

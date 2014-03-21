@@ -35,6 +35,14 @@ Bin à rajouter au PATH de l'environnement
 <code>;C:\Program Files (x86)\Java\javacc-5.0\bin;C:\Program Files (x86)\Java\jdk1.7.0_45\bin</code>
 
 
-Commande à exécuter dans le Terminal
+Commande à exécuter dans le Terminal (se placer dans src)
 -------------
-<code>javacc Yaka.jj & javac *.java & java Yaka</code>
+<code>javacc Yaka.jj & javac *.java</code>
+<code>java Yaka ../tests/fichier_test</code>
+
+
+Commande à exécuter dans DosBox (se placer dans outputs)
+-------------
+<code>c:tasm fichier_test.asm</code>
+<code>c:tlink fichier_test libraries/biblio</code>
+<code>fichier_test</code>

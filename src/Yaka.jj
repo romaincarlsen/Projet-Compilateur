@@ -7,53 +7,64 @@
  *
  */
 
-
 options {
-	JDK_VERSION="1.7";
+	JDK_VERSION = "1.7";
 }
 
 PARSER_BEGIN(Yaka)
 
 	public class Yaka {
 
-
 		// Choix de l'interpreteur a utiliser
 		public static String interpreterType = "YVMasm"; // YVM ou YVMasm
+
+		// Nom du fichier a creer par l'interpreteur
+		public static String scriptOutputName = "../outputs/{{FILENAME}}.asm";
 
 		// Interpreteur
 		public static YVM Interpreter;
 
-		// Nom du fichier a creer par l'interpreteur
-		public static String scriptOutputName ;
+		// Pour se souvenir s'il y a déjà eu une erreur
+		public static boolean err = false;
 
-		
-		public static boolean err = false ;
 
 		// Main : point d'entree pour le compilateur
 		public static void main(String args[]) {
+
 			Yaka analyzer;
 			java.io.InputStream input;
 
+			Writer.print("\n"); // Juste pour un affichage plus claire
+
 			// Recuperation du texte/script a traiter
 			if(args.length==1) {
-				Writer.print(args[args.length-1] + ": ");
-				scriptOutputName = "../" + args[args.length-1] + ".asm";
 				try {
-					input = new java.io.FileInputStream(args[args.length-1]+".yaka");
+					String pathToFile = args[args.length-1];
+					String[] explodePath = pathToFile.split("/");
+
+					// Le nom du fichier de sortie est le même avec l'extension ".asm" dans le dossier "outputs"
+					scriptOutputName = scriptOutputName.replace("{{FILENAME}}", explodePath[explodePath.length - 1]);
+
+					// On récupère le contenu du fichier
+					input = new java.io.FileInputStream(pathToFile+".yaka");
 				}
 				catch (java.io.FileNotFoundException e) {
-					err = true ;
-					Writer.errorln("Fichier introuvable !");
+					err = true;
+					Writer.errorln("Fichier introuvable !\n");
 					return;
 				}
 			}
-			else if (args.length==0) {
-				Writer.println("\nLecture sur l'entree standard...\n");
-				scriptOutputName = "../out.asm";
+			else if (args.length == 0) {
+				Writer.println("Lecture sur l'entree standard...\n");
+
+				// Le nom du fichier de sortie est "test.asm" dans le dossier "outputs"
+				scriptOutputName = scriptOutputName.replace("{{FILENAME}}", "out");
+
+				// On récupère le contenu de la console
 				input = System.in;
 			}
 			else {
-				Writer.errorln("Usage: java Gram [fichier]");
+				Writer.errorln("Usage: java Gram [fichier]\n");
 				return;
 			}
 
@@ -70,27 +81,28 @@ PARSER_BEGIN(Yaka)
 
 				analyzer = new Yaka(input);
 				analyzer.analyse();
-				if (err)
-					throw new ParseException("\n\nPROGRAMME NON COMPILE\n");
-					
-				Writer.println("\nAnalyse Syntaxique terminee !\n");
 
-				// On affiche le resultat du tableau d'ident
-				//Writer.println(IdentArray.string());
+				if(!err) {
 
-				// On affiche le resultat du tableau d'expression
-				//Writer.println(Expression.string()) ;
+					Writer.println("Analyse Syntaxique terminee !\n");
 
-				// On créer le script YVM
-				Interpreter.outputSave();
+					// On affiche le resultat du tableau d'ident
+					//Writer.println(IdentArray.string());
 
-				Writer.println("Programme de sortie : "+scriptOutputName+"\n");
+					// On affiche le resultat du tableau d'expression
+					//Writer.println(Expression.string()) ;
+
+					// On créer le script YVM
+					Interpreter.outputSave();
+
+					Writer.println("Programme de sortie : "+scriptOutputName+"\n");
+				}
 
 			}
 			catch(ParseException e) {
-				err = true ;
+				err = true;
 				TokenMgrError error = new TokenMgrError(
-					"\n"+e.getMessage(),
+					"\n"+e.getMessage()+"\n",
 					TokenMgrError.LEXICAL_ERROR
 				);
 				Writer.errorln(error.getMessage());
@@ -256,19 +268,19 @@ void valConst() : {} {
 	}
 
 	| (<ident>) {
-		IdConst i = (IdConst) IdentArray.get(YakaTokenManager.identLu);
-
 		try {
-			if(i == null)
-				throw new ParseException("Identifiant \""+YakaTokenManager.identLu+"\" non existant");
+			IdConst id = (IdConst) IdentArray.get(YakaTokenManager.identLu);
 
-			IdentArray.lastValue = i.value;
-			IdentArray.lastType = i.type;
+			if(id == null)
+				throw new ParseException("Identifiant \""+YakaTokenManager.identLu+"\" non declare");
+
+			IdentArray.lastValue = id.value;
+			IdentArray.lastType = id.type;
 		}
 		catch(ParseException e) {
-			err = true ;
+			err = true;
 			TokenMgrError error = new TokenMgrError(
-				"Erreur lexicale, ligne "+YakaTokenManager.currentLine+" :\n"+e.getMessage(),
+				"Erreur lexicale, ligne "+YakaTokenManager.currentLine+" :\n"+e.getMessage()+"\n",
 				TokenMgrError.LEXICAL_ERROR
 			);
 			Writer.errorln(error.getMessage());
@@ -347,9 +359,9 @@ void affectation() : {} {
 				throw new ParseException("Affectation impossible sur une constante");
 		}
 		catch(ParseException e) {
-			err = true ;
+			err = true;
 			TokenMgrError error = new TokenMgrError(
-				"Erreur d'affectation, ligne "+YakaTokenManager.currentLine+" :\n"+e.getMessage(),
+				"Erreur d'affectation, ligne "+YakaTokenManager.currentLine+" :\n"+e.getMessage()+"\n",
 				TokenMgrError.LEXICAL_ERROR
 			);
 			Writer.errorln(error.getMessage());
@@ -444,9 +456,9 @@ void expression() : {} {
 				}
 			}
 			catch(ParseException e) {
-				err = true ;
+				err = true;
 				TokenMgrError error = new TokenMgrError(
-					"Erreur d'expression, ligne "+YakaTokenManager.currentLine+" :\n"+e.getMessage(),
+					"Erreur d'expression, ligne "+YakaTokenManager.currentLine+" :\n"+e.getMessage()+"\n",
 					TokenMgrError.LEXICAL_ERROR
 				);
 				Writer.errorln(error.getMessage());
@@ -496,9 +508,9 @@ void simpleExpr() : {} {
 				}
 			}
 			catch(ParseException e) {
-				err = true ;
+				err = true;
 				TokenMgrError error = new TokenMgrError(
-					"Erreur d'expression, ligne "+YakaTokenManager.currentLine+" :\n"+e.getMessage(),
+					"Erreur d'expression, ligne "+YakaTokenManager.currentLine+" :\n"+e.getMessage()+"\n",
 					TokenMgrError.LEXICAL_ERROR
 				);
 				Writer.errorln(error.getMessage());
@@ -548,9 +560,9 @@ void terme() : {} {
 				}
 			}
 			catch(ParseException e) {
-				err = true ;
+				err = true;
 				TokenMgrError error = new TokenMgrError(
-					"Erreur d'expression, ligne "+YakaTokenManager.currentLine+" :\n"+e.getMessage(),
+					"Erreur d'expression, ligne "+YakaTokenManager.currentLine+" :\n"+e.getMessage()+"\n",
 					TokenMgrError.LEXICAL_ERROR
 				);
 				Writer.errorln(error.getMessage());
@@ -589,9 +601,9 @@ void facteur() : {} {
 			}
 		}
 		catch(ParseException e) {
-			err = true ;
+			err = true;
 			TokenMgrError error = new TokenMgrError(
-				"Erreur d'expression, ligne "+YakaTokenManager.currentLine+" :\n"+e.getMessage(),
+				"Erreur d'expression, ligne "+YakaTokenManager.currentLine+" :\n"+e.getMessage()+"\n",
 				TokenMgrError.LEXICAL_ERROR
 			);
 			Writer.errorln(error.getMessage());
@@ -613,24 +625,26 @@ void valeur () : {} {
 	}
 
 	| <ident> {
-		try{
-		Ident id = IdentArray.get(YakaTokenManager.identLu);
-		if (id == null){
-			Expression.addType(YakaConstants.tokenImage[YakaConstants.ERROR]);
-			throw new ParseException("Variable "+YakaTokenManager.identLu+" non declaree");
-		}
-		Expression.addType(IdentArray.get(YakaTokenManager.identLu).type);
+		try {
+			Ident id = IdentArray.get(YakaTokenManager.identLu);
 
-		if(id.isVar())
-			Yaka.Interpreter.iload(id.getValue());
+			if(id == null){
+				Expression.addType(YakaConstants.tokenImage[YakaConstants.ERROR]);
+				throw new ParseException("Identifiant \""+YakaTokenManager.identLu+"\" non declare");
+			}
 
-		else if(id.isConst())
-			Yaka.Interpreter.iconst(id.getValue());
+			Expression.addType(IdentArray.get(YakaTokenManager.identLu).type);
+
+			if(id.isVar())
+				Yaka.Interpreter.iload(id.getValue());
+
+			else if(id.isConst())
+				Yaka.Interpreter.iconst(id.getValue());
 		}
 		catch(ParseException e) {
-			err = true ;
+			err = true;
 			TokenMgrError error = new TokenMgrError(
-				"Erreur d'expression, ligne "+YakaTokenManager.currentLine+" :\n"+e.getMessage(),
+				"Erreur lexicale, ligne "+YakaTokenManager.currentLine+" :\n"+e.getMessage()+"\n",
 				TokenMgrError.LEXICAL_ERROR
 			);
 			Writer.errorln(error.getMessage());

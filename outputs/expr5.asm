@@ -1,14 +1,15 @@
+; imports
+	extrn ecrch:proc
+	extrn ecrent:proc
+	extrn ligsuiv:proc
+
 ; entete
-extrn lirent:proc, ecrent:proc
-extrn ecrbool:proc
-extrn ecrch:proc, ligsuiv:proc
 .MODEL SMALL
 	.586
 
-
 .DATA
-mess0 DB ""c1="$"
-mess1 DB ""-45="$"
+	mess1 DB "c1=$"
+	mess2 DB "-45=$"
 
 .CODE
 debut:
@@ -25,8 +26,8 @@ debut:
 	pop ax
 	mov word ptr [bp-2], ax
 
-; ecrireChaine ""c1=""
-	lea dx, mess0
+; ecrireChaine "c1="
+	lea dx, mess1
 	push dx
 	call ecrch
 
@@ -34,10 +35,12 @@ debut:
 	push word ptr [bp-2]
 
 	call ecrent
+
 ; aLaLigne
 	call ligsuiv
-; ecrireChaine ""-45=""
-	lea dx, mess1
+
+; ecrireChaine "-45="
+	lea dx, mess2
 	push dx
 	call ecrch
 
@@ -100,8 +103,10 @@ debut:
 	push ax
 
 	call ecrent
+
 ; aLaLigne
 	call ligsuiv
+
 ; queue
 	nop
 	exitcode

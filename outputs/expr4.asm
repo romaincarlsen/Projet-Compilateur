@@ -1,14 +1,16 @@
+; imports
+	extrn ecrch:proc
+	extrn lirent:proc
+	extrn ligsuiv:proc
+	extrn ecrent:proc
+
 ; entete
-extrn lirent:proc, ecrent:proc
-extrn ecrbool:proc
-extrn ecrch:proc, ligsuiv:proc
 .MODEL SMALL
 	.586
 
-
 .DATA
-mess0 DB ""c1="$"
-mess1 DB ""factorielle 5= "$"
+	mess1 DB "c1=$"
+	mess2 DB "factorielle 5= $"
 
 .CODE
 debut:
@@ -18,8 +20,8 @@ debut:
 	mov bp, sp
 	sub sp, 4
 
-; ecrireChaine ""c1=""
-	lea dx, mess0
+; ecrireChaine "c1="
+	lea dx, mess1
 	push dx
 	call ecrch
 
@@ -27,14 +29,18 @@ debut:
 	lea dx,[bp-2]
 	push dx
 	call lirent
+
 ; aLaLigne
 	call ligsuiv
+
 ; iload -2
 	push word ptr [bp-2]
 
 	call ecrent
+
 ; aLaLigne
 	call ligsuiv
+
 ; iconst 2
 	push word ptr 2
 
@@ -75,10 +81,12 @@ debut:
 	push ax
 
 	call ecrent
+
 ; aLaLigne
 	call ligsuiv
-; ecrireChaine ""factorielle 5= ""
-	lea dx, mess1
+
+; ecrireChaine "factorielle 5= "
+	lea dx, mess2
 	push dx
 	call ecrch
 
@@ -122,6 +130,7 @@ debut:
 	push ax
 
 	call ecrent
+
 ; queue
 	nop
 	exitcode

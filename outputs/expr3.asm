@@ -1,15 +1,17 @@
+; imports
+	extrn ecrch:proc
+	extrn lirent:proc
+	extrn ligsuiv:proc
+	extrn ecrent:proc
+
 ; entete
-extrn lirent:proc, ecrent:proc
-extrn ecrbool:proc
-extrn ecrch:proc, ligsuiv:proc
 .MODEL SMALL
 	.586
 
-
 .DATA
-mess0 DB ""c1="$"
-mess1 DB ""c3="$"
-mess2 DB ""c4="$"
+	mess1 DB "c1=$"
+	mess2 DB "c3=$"
+	mess3 DB "c4=$"
 
 .CODE
 debut:
@@ -19,8 +21,8 @@ debut:
 	mov bp, sp
 	sub sp, 14
 
-; ecrireChaine ""c1=""
-	lea dx, mess0
+; ecrireChaine "c1="
+	lea dx, mess1
 	push dx
 	call ecrch
 
@@ -28,10 +30,12 @@ debut:
 	lea dx,[bp-2]
 	push dx
 	call lirent
+
 ; aLaLigne
 	call ligsuiv
-; ecrireChaine ""c3=""
-	lea dx, mess1
+
+; ecrireChaine "c3="
+	lea dx, mess2
 	push dx
 	call ecrch
 
@@ -39,10 +43,12 @@ debut:
 	lea dx,[bp-6]
 	push dx
 	call lirent
+
 ; aLaLigne
 	call ligsuiv
-; ecrireChaine ""c4=""
-	lea dx, mess2
+
+; ecrireChaine "c4="
+	lea dx, mess3
 	push dx
 	call ecrch
 
@@ -50,8 +56,10 @@ debut:
 	lea dx,[bp-8]
 	push dx
 	call lirent
+
 ; aLaLigne
 	call ligsuiv
+
 ; iload -6
 	push word ptr [bp-6]
 
@@ -85,8 +93,10 @@ debut:
 	push ax
 
 	call ecrent
+
 ; aLaLigne
 	call ligsuiv
+
 ; iload -2
 	push word ptr [bp-2]
 
@@ -118,6 +128,7 @@ debut:
 	push ax
 
 	call ecrent
+
 ; queue
 	nop
 	exitcode
