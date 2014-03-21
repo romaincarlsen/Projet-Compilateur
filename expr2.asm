@@ -142,9 +142,9 @@ debut:
 	pop bx
 	pop ax
 	cmp ax, bx
-	jg $+3
+	jg $+6
 	push -1
-	jmp $+2
+	jmp $+4
 	push 0
 
 	call ecrent

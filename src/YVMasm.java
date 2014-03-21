@@ -177,9 +177,9 @@ public class YVMasm extends YVM {
 		code += "\tpop bx\n";
 		code += "\tpop ax\n";
 		code += "\tcmp ax, bx\n";
-		code += "\tjge $+3\n";
+		code += "\tjge $+6\n";
 		code += "\tpush "+Integer.toString(TRUE)+"\n";
-		code += "\tjmp $+2\n";
+		code += "\tjmp $+4\n";
 		code += "\tpush "+Integer.toString(FALSE)+"\n";
 		code += "\n";
 	}
@@ -190,9 +190,9 @@ public class YVMasm extends YVM {
 		code += "\tpop bx\n";
 		code += "\tpop ax\n";
 		code += "\tcmp ax, bx\n";
-		code += "\tjle $+3\n";
+		code += "\tjle $+6\n";
 		code += "\tpush "+Integer.toString(TRUE)+"\n";
-		code += "\tjmp $+2\n";
+		code += "\tjmp $+4\n";
 		code += "\tpush "+Integer.toString(FALSE)+"\n";
 		code += "\n";
 	}
@@ -203,9 +203,9 @@ public class YVMasm extends YVM {
 		code += "\tpop bx\n";
 		code += "\tpop ax\n";
 		code += "\tcmp ax, bx\n";
-		code += "\tjg $+3\n";
+		code += "\tjg $+6\n";
 		code += "\tpush "+Integer.toString(TRUE)+"\n";
-		code += "\tjmp $+2\n";
+		code += "\tjmp $+4\n";
 		code += "\tpush "+Integer.toString(FALSE)+"\n";
 		code += "\n";
 	}
@@ -216,9 +216,9 @@ public class YVMasm extends YVM {
 		code += "\tpop bx\n";
 		code += "\tpop ax\n";
 		code += "\tcmp ax, bx\n";
-		code += "\tjl $+3\n";
+		code += "\tjl $+6\n";
 		code += "\tpush "+Integer.toString(TRUE)+"\n";
-		code += "\tjmp $+2\n";
+		code += "\tjmp $+4\n";
 		code += "\tpush "+Integer.toString(FALSE)+"\n";
 		code += "\n";
 	}
@@ -229,9 +229,9 @@ public class YVMasm extends YVM {
 		code += "\tpop bx\n";
 		code += "\tpop ax\n";
 		code += "\tcmp ax, bx\n";
-		code += "\tjne $+3\n";
+		code += "\tjne $+6\n";
 		code += "\tpush "+Integer.toString(TRUE)+"\n";
-		code += "\tjmp $+2\n";
+		code += "\tjmp $+4\n";
 		code += "\tpush "+Integer.toString(FALSE)+"\n";
 		code += "\n";
 	}
@@ -242,9 +242,9 @@ public class YVMasm extends YVM {
 		code += "\tpop bx\n";
 		code += "\tpop ax\n";
 		code += "\tcmp ax, bx\n";
-		code += "\tje $+3\n";
+		code += "\tje $+6\n";
 		code += "\tpush "+Integer.toString(TRUE)+"\n";
-		code += "\tjmp $+2\n";
+		code += "\tjmp $+4\n";
 		code += "\tpush "+Integer.toString(FALSE)+"\n";
 		code += "\n";
 	}

@@ -9,8 +9,10 @@
                 public static YVM Interpreter;
 
                 // Nom du fichier a creer par l'interpreteur
-                public static String scriptOutputName = "../programme-test.asm";
+                public static String scriptOutputName ;
 
+
+                public static boolean err = false ;
 
                 // Main : point d'entree pour le compilateur
                 public static void main(String args[]) {
@@ -20,16 +22,19 @@
                         // Recuperation du texte/script a traiter
                         if(args.length==1) {
                                 Writer.print(args[args.length-1] + ": ");
+                                scriptOutputName = "../" + args[args.length-1] + ".asm";
                                 try {
                                         input = new java.io.FileInputStream(args[args.length-1]+".yaka");
                                 }
                                 catch (java.io.FileNotFoundException e) {
+                                        err = true ;
                                         Writer.errorln("Fichier introuvable !");
                                         return;
                                 }
                         }
                         else if (args.length==0) {
                                 Writer.println("\u005cnLecture sur l'entree standard...\u005cn");
+                                scriptOutputName = "../out.asm";
                                 input = System.in;
                         }
                         else {
@@ -50,6 +55,8 @@
 
                                 analyzer = new Yaka(input);
                                 analyzer.analyse();
+                                if (err)
+                                        throw new ParseException("\u005cn\u005cnPROGRAMME NON COMPILE\u005cn");
 
                                 Writer.println("\u005cnAnalyse Syntaxique terminee !\u005cn");
 
@@ -66,8 +73,9 @@
 
                         }
                         catch(ParseException e) {
+                                err = true ;
                                 TokenMgrError error = new TokenMgrError(
-                                        "Erreur de syntaxe, ligne "+YakaTokenManager.currentLine+" :\u005cn"+e.getMessage(),
+                                        "\u005cn"+e.getMessage(),
                                         TokenMgrError.LEXICAL_ERROR
                                 );
                                 Writer.errorln(error.getMessage());
@@ -169,6 +177,7 @@
                         IdentArray.lastType = i.type;
                 }
                 catch(ParseException e) {
+                        err = true ;
                         TokenMgrError error = new TokenMgrError(
                                 "Erreur lexicale, ligne "+YakaTokenManager.currentLine+" :\u005cn"+e.getMessage(),
                                 TokenMgrError.LEXICAL_ERROR
@@ -297,6 +306,7 @@
                                 {if (true) throw new ParseException("Affectation impossible sur une constante");}
                 }
                 catch(ParseException e) {
+                        err = true ;
                         TokenMgrError error = new TokenMgrError(
                                 "Erreur d'affectation, ligne "+YakaTokenManager.currentLine+" :\u005cn"+e.getMessage(),
                                 TokenMgrError.LEXICAL_ERROR
@@ -384,7 +394,7 @@
 
                                 String res = Expression.binExprReturn(t1,t2,op);
 
-                                if(res == tokenImage[ERROR])
+                                if(res == tokenImage[ERROR] && t1 != tokenImage[ERROR] && t2 != tokenImage[ERROR])
                                         {if (true) throw new ParseException("Operation de type "+t1+" "+op+" "+t2+" interdite");}
 
                                 else {
@@ -409,10 +419,11 @@
                                                 Yaka.Interpreter.idiff();
 
                                         else
-                                                {if (true) throw new ParseException("Operateur "+op+" innatendu");}
+                                                {if (true) throw new ParseException("Operateur "+op+" inattendu");}
                                 }
                         }
                         catch(ParseException e) {
+                                err = true ;
                                 TokenMgrError error = new TokenMgrError(
                                         "Erreur d'expression, ligne "+YakaTokenManager.currentLine+" :\u005cn"+e.getMessage(),
                                         TokenMgrError.LEXICAL_ERROR
@@ -454,7 +465,7 @@
 
                                 String res = Expression.binExprReturn(t1,t2,op);
 
-                                if(res == tokenImage[ERROR])
+                                if(res == tokenImage[ERROR]&& t1 != tokenImage[ERROR] && t2 != tokenImage[ERROR])
                                         {if (true) throw new ParseException("Operation de type "+t1+" "+op+" "+t2+" interdite");}
 
                                 else {
@@ -474,6 +485,7 @@
                                 }
                         }
                         catch(ParseException e) {
+                                err = true ;
                                 TokenMgrError error = new TokenMgrError(
                                         "Erreur d'expression, ligne "+YakaTokenManager.currentLine+" :\u005cn"+e.getMessage(),
                                         TokenMgrError.LEXICAL_ERROR
@@ -511,7 +523,7 @@
 
                                 String res = Expression.binExprReturn(t1,t2,op);
 
-                                if(res == tokenImage[ERROR])
+                                if(res == tokenImage[ERROR] && t1 != tokenImage[ERROR] && t2 != tokenImage[ERROR])
                                         {if (true) throw new ParseException("Operation de type "+t1+" "+op+" "+t2+" interdite");}
 
                                 else {
@@ -531,6 +543,7 @@
                                 }
                         }
                         catch(ParseException e) {
+                                err = true ;
                                 TokenMgrError error = new TokenMgrError(
                                         "Erreur d'expression, ligne "+YakaTokenManager.currentLine+" :\u005cn"+e.getMessage(),
                                         TokenMgrError.LEXICAL_ERROR
@@ -560,7 +573,7 @@
 
                         String res = Expression.unExprReturn(t, op);
 
-                        if(res == tokenImage[ERROR])
+                        if(res == tokenImage[ERROR] && t != tokenImage[ERROR])
                                         {if (true) throw new ParseException("Operation de type "+op+" "+t+" interdite");}
 
                         else {
@@ -577,6 +590,7 @@
                         }
                 }
                 catch(ParseException e) {
+                        err = true ;
                         TokenMgrError error = new TokenMgrError(
                                 "Erreur d'expression, ligne "+YakaTokenManager.currentLine+" :\u005cn"+e.getMessage(),
                                 TokenMgrError.LEXICAL_ERROR
@@ -620,7 +634,12 @@
       break;
     case ident:
       jj_consume_token(ident);
+                try{
                 Ident id = IdentArray.get(YakaTokenManager.identLu);
+                if (id == null){
+                        Expression.addType(YakaConstants.tokenImage[YakaConstants.ERROR]);
+                        {if (true) throw new ParseException("Variable "+YakaTokenManager.identLu+" non declaree");}
+                }
                 Expression.addType(IdentArray.get(YakaTokenManager.identLu).type);
 
                 if(id.isVar())
@@ -628,6 +647,15 @@
 
                 else if(id.isConst())
                         Yaka.Interpreter.iconst(id.getValue());
+                }
+                catch(ParseException e) {
+                        err = true ;
+                        TokenMgrError error = new TokenMgrError(
+                                "Erreur d'expression, ligne "+YakaTokenManager.currentLine+" :\u005cn"+e.getMessage(),
+                                TokenMgrError.LEXICAL_ERROR
+                        );
+                        Writer.errorln(error.getMessage());
+                }
       break;
     case VRAI:
       jj_consume_token(VRAI);
