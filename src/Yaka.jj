@@ -24,7 +24,7 @@ PARSER_BEGIN(Yaka)
 		public static YVM Interpreter;
 
 		// Nom du fichier a creer par l'interpreteur
-		public static String scriptOutputName = "../programme-test.txt";
+		public static String scriptOutputName = "../programme-test.asm";
 
 
 		// Main : point d'entree pour le compilateur
@@ -363,13 +363,13 @@ void ecriture() : {} {
 
 	(<ECRIRE>"("
 
-		expression() {
+		(expression() {
 			// Todo
-			Yaka.Interpreter.ecrireEnt(null);
+			Yaka.Interpreter.ecrireEnt();
 		}
 		| <chaine> {
 			Yaka.Interpreter.ecrireChaine(YakaTokenManager.chaineLue);
-		}
+		})
 
 	")")
 

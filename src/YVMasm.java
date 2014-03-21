@@ -1,7 +1,7 @@
 
 public class YVMasm extends YVM {
 
-	private String data = "";
+	private String data = "\n.DATA\n";
 	private int dataCpt = 0;
 
 
@@ -25,10 +25,13 @@ public class YVMasm extends YVM {
 	@Override
 	public void entete() {
 		header += "; entete\n";
+		header += "extrn lirent:proc, ecrent:proc\n";
+		header += "extrn ecrbool:proc\n";
+		header += "extrn ecrch:proc, ligsuiv:proc\n";
 		header += ".MODEL SMALL\n";
 		header += "\t.586\n";
 		header += "\n";
-		code += ".CODE\n";
+		code += "\n.CODE\n";
 		code += "debut:\n";
 		code += " \tSTARTUPCODE\n";
 		code += "\n";
@@ -49,7 +52,7 @@ public class YVMasm extends YVM {
 	public void affect(Ident id) {
 		code += "; istore "+Integer.toString(id.getValue())+"\n";
 		code += "\tpop ax\n";
-		code += "\tmove word ptr [bp"+Integer.toString(id.getValue())+"], ax\n";
+		code += "\tmov word ptr [bp"+Integer.toString(id.getValue())+"], ax\n";
 		code += "\n";
 	}
 
@@ -267,7 +270,7 @@ public class YVMasm extends YVM {
 	@Override
 	public void iconst(int valeur) {
 		code += "; iconst "+valeur+"\n";
-		code += "\tpush "+valeur+"\n";
+		code += "\tpush word ptr "+valeur+"\n";
 		code += "\n";
 	}
 
@@ -316,7 +319,7 @@ public class YVMasm extends YVM {
 		// Todo : faire un tableau des bibliothèques à charger (ne pas ajouter si déjà existant)
 
 		String msgName = "mess"+Integer.toString(dataCpt);
-		data += msgName+" DB \""+s+"$\"";
+		data += msgName+" DB \""+s+"$\"\n";
 		dataCpt++;
 
 		code += "; ecrireChaine \""+s+"\""+"\n";
@@ -326,27 +329,31 @@ public class YVMasm extends YVM {
 		code += "\n";
 	}
 
-	public void ecrireEnt(Ident id) {
+	public void ecrireEnt() {
 		// Entier ou booléen
 		// Todo : faire un tableau des bibliothèques à charger (ne pas ajouter si déjà existant)
 
 		/*data += "mess"+Integer.toString(dataCpt)+" DB \""+s+"$\"";
 		dataCpt++;*/
 
-		code += "\t"+"iload "+id.getValue()+"\n";
-		code += "\t"+"ecrireEnt"+"\n";
+		//code += "\t"+"iload "+id.getValue()+"\n";
+		code += "\t"+"call ecrent"+"\n";
 	}
 
 	public void aLaLigne() {
 		// Todo
-		code += "\t"+"aLaLigne"+"\n";
+		code += "; "+"aLaLigne"+"\n";
+		code += "\tcall ligsuiv\n";
 	}
 
 
 	// Insctructions de lecture
 	public void lireEnt(Ident id) {
 		// Todo
-		code += "\t"+"lireEnt "+id.getValue()+"\n";
+		code += "; "+"lireEnt "+id.getValue()+"\n";
+		code += "\tlea dx,[bp"+id.getValue()+"]\n";
+		code += "\tpush dx\n";
+		code += "\tcall lirent\n";
 	}
 
 }

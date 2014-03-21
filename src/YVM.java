@@ -148,9 +148,9 @@ public class YVM {
 		code += "\t"+"ecrireChaine \""+s+"\""+"\n";
 	}
 
-	public void ecrireEnt(Ident id) {
+	public void ecrireEnt() {
 		// Entier ou booléen
-		code += "\t"+"iload "+id.getValue()+"\n";
+		//code += "\t"+"iload "+id.getValue()+"\n";
 		code += "\t"+"ecrireEnt"+"\n";
 	}
 
