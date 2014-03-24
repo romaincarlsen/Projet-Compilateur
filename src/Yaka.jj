@@ -343,11 +343,46 @@ void suiteInstr() : {} {
 	( ";" (instruction())? )*
 }
 
+void boucle() : {} {
+					{
+						// placer l'étiquette de début
+						Yaka.Interpreter.label(Iteration.genereEtiquetteDebut()) ;
+						
+					}
+	<TANTQUE> expression() <FAIRE> {
+						try {// vérifier que type booléen et écrire le ligne de test
+							String expr = Expression.popType();
+							if (expr != YakaConstants.tokenImage[YakaConstants.BOOLEEN])
+								throw new ParseException("type expression attendue après TANTQUE : BOOLEEN, type expression relevée "+ expr);
+							Yaka.Interpreter.iffaux(Iteration.etiquetteCouranteFin()) ;
+						}
+						catch(ParseException e) {
+							err = true;
+							TokenMgrError error = new TokenMgrError(
+								"Erreur d'étiquette, ligne "+YakaTokenManager.currentLine+" :\n"+e.getMessage()+"\n",
+								TokenMgrError.LEXICAL_ERROR
+							);
+							Writer.errorln(error.getMessage());
+						}
+					}
+		
+		(suiteInstr())*
+					{
+						// placer le goto vers l'étiquette de début	
+						Yaka.Interpreter.jump(Iteration.etiquetteCouranteDebut()) ;
+						
+					}
+	<FAIT>				{
+						// placer l'étiquette de fin
+						Yaka.Interpreter.label(Iteration.genereEtiquetteFin()) ;
+					}
+}
 
 void instruction() : {} {
 	affectation() |
 	lecture()|
-	ecriture()
+	ecriture() |
+	boucle()
 }
 
 

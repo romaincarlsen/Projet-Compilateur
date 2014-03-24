@@ -131,7 +131,7 @@ public class YVM {
 
 
 	public void jump(String label) {
-		code += "\t"+"jump "+label+"\n";
+		code += "\t"+"goto "+label+"\n";
 	}
 
 
@@ -164,5 +164,9 @@ public class YVM {
 	public void lireEnt(Ident id) {
 		code += "\t"+"lireEnt "+id.getValue()+"\n";
 	}
-
+	
+	public void label(String etiquette) {
+		code += etiquette + ":\n";
+	}
+	
 }

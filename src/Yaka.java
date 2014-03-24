@@ -279,6 +279,7 @@
       }
       jj_consume_token(52);
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+      case TANTQUE:
       case ECRIRE:
       case LIRE:
       case ALALIGNE:
@@ -290,6 +291,49 @@
         ;
       }
     }
+  }
+
+  static final public void boucle() throws ParseException {
+                                                // placer l'étiquette de début
+                                                Yaka.Interpreter.label(Iteration.genereEtiquetteDebut()) ;
+    jj_consume_token(TANTQUE);
+    expression();
+    jj_consume_token(FAIRE);
+                                                try {// vérifier que type booléen et écrire le ligne de test
+                                                        String expr = Expression.popType();
+                                                        if (expr != YakaConstants.tokenImage[YakaConstants.BOOLEEN])
+                                                                {if (true) throw new ParseException("type expression attendue apr\u00e8s TANTQUE : BOOLEEN, type expression relev\u00e9e "+ expr);}
+                                                        Yaka.Interpreter.iffaux(Iteration.etiquetteCouranteFin()) ;
+                                                }
+                                                catch(ParseException e) {
+                                                        err = true;
+                                                        TokenMgrError error = new TokenMgrError(
+                                                                "Erreur d'\u00e9tiquette, ligne "+YakaTokenManager.currentLine+" :\u005cn"+e.getMessage()+"\u005cn",
+                                                                TokenMgrError.LEXICAL_ERROR
+                                                        );
+                                                        Writer.errorln(error.getMessage());
+                                                }
+    label_6:
+    while (true) {
+      switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+      case TANTQUE:
+      case ECRIRE:
+      case LIRE:
+      case ALALIGNE:
+      case ident:
+        ;
+        break;
+      default:
+        jj_la1[8] = jj_gen;
+        break label_6;
+      }
+      suiteInstr();
+    }
+                                                // placer le goto vers l'étiquette de début	
+                                                Yaka.Interpreter.jump(Iteration.etiquetteCouranteDebut()) ;
+    jj_consume_token(FAIT);
+                                                // placer l'étiquette de fin
+                                                Yaka.Interpreter.label(Iteration.genereEtiquetteFin()) ;
   }
 
   static final public void instruction() throws ParseException {
@@ -304,8 +348,11 @@
     case ALALIGNE:
       ecriture();
       break;
+    case TANTQUE:
+      boucle();
+      break;
     default:
-      jj_la1[8] = jj_gen;
+      jj_la1[9] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
@@ -361,7 +408,7 @@
                         Yaka.Interpreter.ecrireChaine(YakaTokenManager.chaineLue);
         break;
       default:
-        jj_la1[9] = jj_gen;
+        jj_la1[10] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
@@ -372,7 +419,7 @@
                 Yaka.Interpreter.aLaLigne();
       break;
     default:
-      jj_la1[10] = jj_gen;
+      jj_la1[11] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
@@ -445,14 +492,14 @@
                         }
       break;
     default:
-      jj_la1[11] = jj_gen;
+      jj_la1[12] = jj_gen;
       ;
     }
   }
 
   static final public void simpleExpr() throws ParseException {
     terme();
-    label_6:
+    label_7:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
       case PLUS:
@@ -461,8 +508,8 @@
         ;
         break;
       default:
-        jj_la1[12] = jj_gen;
-        break label_6;
+        jj_la1[13] = jj_gen;
+        break label_7;
       }
       opAdd();
       terme();
@@ -510,7 +557,7 @@
 
   static final public void terme() throws ParseException {
     facteur();
-    label_7:
+    label_8:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
       case MUL:
@@ -519,8 +566,8 @@
         ;
         break;
       default:
-        jj_la1[13] = jj_gen;
-        break label_7;
+        jj_la1[14] = jj_gen;
+        break label_8;
       }
       opMul();
       facteur();
@@ -612,7 +659,7 @@
                 }
       break;
     default:
-      jj_la1[14] = jj_gen;
+      jj_la1[15] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
@@ -632,7 +679,7 @@
       jj_consume_token(54);
       break;
     default:
-      jj_la1[15] = jj_gen;
+      jj_la1[16] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
@@ -683,7 +730,7 @@
                 Yaka.Interpreter.iconst(Yaka.Interpreter.FALSE);
       break;
     default:
-      jj_la1[16] = jj_gen;
+      jj_la1[17] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
@@ -716,7 +763,7 @@
                 Expression.addOperator(tokenImage[SUPEGAL]);
       break;
     default:
-      jj_la1[17] = jj_gen;
+      jj_la1[18] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
@@ -737,7 +784,7 @@
                 Expression.addOperator(tokenImage[OU]);
       break;
     default:
-      jj_la1[18] = jj_gen;
+      jj_la1[19] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
@@ -758,7 +805,7 @@
                 Expression.addOperator(tokenImage[ET]);
       break;
     default:
-      jj_la1[19] = jj_gen;
+      jj_la1[20] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
@@ -775,7 +822,7 @@
                 Expression.addOperator(tokenImage[NON]);
       break;
     default:
-      jj_la1[20] = jj_gen;
+      jj_la1[21] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
@@ -791,7 +838,7 @@
   static public Token jj_nt;
   static private int jj_ntk;
   static private int jj_gen;
-  static final private int[] jj_la1 = new int[21];
+  static final private int[] jj_la1 = new int[22];
   static private int[] jj_la1_0;
   static private int[] jj_la1_1;
   static {
@@ -799,10 +846,10 @@
       jj_la1_init_1();
    }
    private static void jj_la1_init_0() {
-      jj_la1_0 = new int[] {0x0,0x800000,0x0,0x80000000,0x0,0x20400000,0x0,0x0,0x0,0x80100200,0x0,0x3f000,0x80300,0x40c00,0x80100200,0x80000000,0x80000000,0x3f000,0x80300,0x40c00,0x100200,};
+      jj_la1_0 = new int[] {0x0,0x800000,0x0,0x80000000,0x0,0x20400000,0x0,0x0,0x0,0x0,0x80100200,0x0,0x3f000,0x80300,0x40c00,0x80100200,0x80000000,0x80000000,0x3f000,0x80300,0x40c00,0x100200,};
    }
    private static void jj_la1_init_1() {
-      jj_la1_1 = new int[] {0x2,0x0,0x80000,0x30004,0x80000,0x0,0x100000,0x23800,0x23800,0x270004,0x2800,0x0,0x0,0x0,0x230004,0x230004,0x30004,0x0,0x0,0x0,0x0,};
+      jj_la1_1 = new int[] {0x2,0x0,0x80000,0x30004,0x80000,0x0,0x100000,0x23801,0x23801,0x23801,0x270004,0x2800,0x0,0x0,0x0,0x230004,0x230004,0x30004,0x0,0x0,0x0,0x0,};
    }
 
   /** Constructor with InputStream. */
@@ -823,7 +870,7 @@
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 21; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 22; i++) jj_la1[i] = -1;
   }
 
   /** Reinitialise. */
@@ -837,7 +884,7 @@
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 21; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 22; i++) jj_la1[i] = -1;
   }
 
   /** Constructor. */
@@ -854,7 +901,7 @@
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 21; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 22; i++) jj_la1[i] = -1;
   }
 
   /** Reinitialise. */
@@ -864,7 +911,7 @@
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 21; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 22; i++) jj_la1[i] = -1;
   }
 
   /** Constructor with generated Token Manager. */
@@ -880,7 +927,7 @@
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 21; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 22; i++) jj_la1[i] = -1;
   }
 
   /** Reinitialise. */
@@ -889,7 +936,7 @@
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 21; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 22; i++) jj_la1[i] = -1;
   }
 
   static private Token jj_consume_token(int kind) throws ParseException {
@@ -945,7 +992,7 @@
       la1tokens[jj_kind] = true;
       jj_kind = -1;
     }
-    for (int i = 0; i < 21; i++) {
+    for (int i = 0; i < 22; i++) {
       if (jj_la1[i] == jj_gen) {
         for (int j = 0; j < 32; j++) {
           if ((jj_la1_0[i] & (1<<j)) != 0) {

@@ -317,7 +317,7 @@ public class YVMasm extends YVM {
 
 	@Override
 	public void jump(String label) {
-		code += "; jump "+label+"\n";
+		code += "; goto "+label+"\n";
 		code += "\tjmp "+label+"\n";
 		code += "\n";
 	}
@@ -398,5 +398,11 @@ public class YVMasm extends YVM {
 		code += "\t"+"call "+library+"\n";
 		code += "\n";
 	}
+	
+	public void label(String etiquette) {
+		code += etiquette + ":\n";
+		
+	}
+	
 
 }
