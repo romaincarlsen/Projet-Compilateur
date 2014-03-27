@@ -122,11 +122,11 @@ public class YVM {
 
 	// Instructions de controle de flot
 	public void ifeq(String label) {
-		code += "\t"+"ifeq"+"\n";
+		code += "\t"+"ifeq "+label+"\n";
 	}
 
 	public void iffaux(String label) {
-		code += "\t"+"iffaux"+"\n";
+		code += "\t"+"iffaux "+label+"\n";
 	}
 
 

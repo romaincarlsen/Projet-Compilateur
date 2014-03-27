@@ -347,7 +347,8 @@ void suiteInstr() : {} {
 void instruction() : {} {
 	affectation() |
 	lecture()|
-	ecriture()
+	ecriture()|
+	conditionnel()
 }
 
 
@@ -400,6 +401,43 @@ void ecriture() : {} {
 	}
 }
 
+
+void conditionnel() : {} {
+	{
+		String sinon = Condition.getLabel(tokenImage[SINON]);	
+		String fsi = Condition.getLabel(tokenImage[FSI]);
+	}
+	<SI>
+	expression() {
+		try {
+			if(Expression.popType() != tokenImage[BOOLEEN])
+				throw new ParseException("Expression non booléenne");
+		}
+		catch(ParseException e) {
+			err = true;
+			TokenMgrError error = new TokenMgrError(
+				"Erreur de condition, ligne "+YakaTokenManager.currentLine+" :\n"+e.getMessage()+"\n",
+				TokenMgrError.LEXICAL_ERROR
+			);
+			Writer.errorln(error.getMessage());
+		}
+		
+		Yaka.Interpreter.iffaux(sinon);
+	}
+	<ALORS>
+	suiteInstr() {
+		Yaka.Interpreter.jump(fsi);
+	}
+	<SINON> {
+		// Incrémente automatiquement un compteur pour générer SINON1, SINON2...
+		Yaka.Interpreter.label(sinon);
+	}
+	(suiteInstr()) ?
+	<FSI> {
+		// Incrémente automatiquement un compteur pour générer FSI1, FSI2...
+		Yaka.Interpreter.label(fsi);
+	}
+}
 
 /**
  * Expression
