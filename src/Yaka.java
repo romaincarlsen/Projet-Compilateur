@@ -279,6 +279,8 @@
       }
       jj_consume_token(52);
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+      case SI:
+      case TANTQUE:
       case ECRIRE:
       case LIRE:
       case ALALIGNE:
@@ -303,6 +305,12 @@
     case ECRIRE:
     case ALALIGNE:
       ecriture();
+      break;
+    case TANTQUE:
+      boucle();
+      break;
+    case SI:
+      conditionnel();
       break;
     default:
       jj_la1[8] = jj_gen;
@@ -378,6 +386,86 @@
     }
   }
 
+  static final public void boucle() throws ParseException {
+                // Génération des étiquettes de saut avec incrémentation du numéro
+                String faire = Condition.getLabel(tokenImage[FAIRE]);
+                String fait = Condition.getLabel(tokenImage[FAIT]);
+    jj_consume_token(TANTQUE);
+                // Ajout de l'étiquette de début de boucle
+                Yaka.Interpreter.label(faire);
+    expression();
+                try {
+                        String type = Expression.popType();
+
+                        // Vérification du type (booléen) de l'expression
+                        if(type != tokenImage[BOOLEEN])
+                                {if (true) throw new ParseException("Expression non bool\u00e9enne ("+type+" trouv\u00e9)");}
+
+                        // Si expression fausse, on sort de la boucle
+                        Yaka.Interpreter.iffaux(fait);
+                }
+                catch(ParseException e) {
+                        err = true;
+                        TokenMgrError error = new TokenMgrError(
+                                "Erreur d'iteration, ligne "+YakaTokenManager.currentLine+" :\u005cn"+e.getMessage()+"\u005cn",
+                                TokenMgrError.LEXICAL_ERROR
+                        );
+                        Writer.errorln(error.getMessage());
+                }
+    jj_consume_token(FAIRE);
+    suiteInstr();
+                // Saut sur l'étiquette de début de boucle
+                Yaka.Interpreter.jump(faire);
+    jj_consume_token(FAIT);
+                // Ajout de l'étiquette de fin de boucle
+                Yaka.Interpreter.label(fait);
+  }
+
+  static final public void conditionnel() throws ParseException {
+                // Génération des étiquettes de saut avec incrémentation du numéro
+                String sinon = Condition.getLabel(tokenImage[SINON]);
+                String fsi = Condition.getLabel(tokenImage[FSI]);
+    jj_consume_token(SI);
+    expression();
+                try {
+                        String type = Expression.popType();
+
+                        // Vérification du type (booléen) de l'expression
+                        if(type != tokenImage[BOOLEEN])
+                                {if (true) throw new ParseException("Expression non bool\u00e9enne ("+type+" trouv\u00e9)");}
+
+                        // Si expression fausse, on passe au bloc "sinon" de la conditionnel
+                        Yaka.Interpreter.iffaux(sinon);
+                }
+                catch(ParseException e) {
+                        err = true;
+                        TokenMgrError error = new TokenMgrError(
+                                "Erreur de condition, ligne "+YakaTokenManager.currentLine+" :\u005cn"+e.getMessage()+"\u005cn",
+                                TokenMgrError.LEXICAL_ERROR
+                        );
+                        Writer.errorln(error.getMessage());
+                }
+    jj_consume_token(ALORS);
+    suiteInstr();
+                // Saut en fin de conditionnel (pour ne pas exécuter les instructions "sinon")
+                Yaka.Interpreter.jump(fsi);
+
+                // Ajout de l'étiquette du début de bloc "sinon" de la conditionnel
+                Yaka.Interpreter.label(sinon);
+    switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+    case SINON:
+      jj_consume_token(SINON);
+      suiteInstr();
+      break;
+    default:
+      jj_la1[11] = jj_gen;
+      ;
+    }
+    jj_consume_token(FSI);
+                // Ajout de l'étiquette de fin de conditionnel
+                Yaka.Interpreter.label(fsi);
+  }
+
 /**
  * Expression
  */
@@ -392,47 +480,40 @@
     case DIFF:
       opRel();
       simpleExpr();
-                        String t1 = Expression.popType();
-                        String t2 = Expression.popType();
-                        String op = Expression.popOperator();
-
-                        String inf =  tokenImage[INF];
-                        String infegal = tokenImage[INFEGAL];
-                        String sup = tokenImage[SUP];
-                        String supegal = tokenImage[SUPEGAL];
-                        String egal = tokenImage[EGAL];
-                        String diff = tokenImage[DIFF];
+                        String type1 = Expression.popType();
+                        String operator = Expression.popOperator();
+                        String type2 = Expression.popType();
 
                         try {
 
-                                String res = Expression.binExprReturn(t1,t2,op);
+                                String newType = Expression.dualOperandType(type1, operator, type2);
 
-                                if(res == tokenImage[ERROR] && t1 != tokenImage[ERROR] && t2 != tokenImage[ERROR])
-                                        {if (true) throw new ParseException("Operation de type "+t1+" "+op+" "+t2+" interdite");}
+                                if(newType == tokenImage[ERROR] && type1 != tokenImage[ERROR] && type2 != tokenImage[ERROR])
+                                        {if (true) throw new ParseException("Operation de type "+type1+" "+operator+" "+type2+" interdite");}
 
                                 else {
-                                        Expression.addType(res);
+                                        Expression.addType(newType);
 
-                                        if (op == inf)
+                                        if (operator == tokenImage[INF])
                                                 Yaka.Interpreter.iinf();
 
-                                        else if (op == infegal)
+                                        else if (operator == tokenImage[INFEGAL])
                                                 Yaka.Interpreter.iinfegal();
 
-                                        else if (op == sup)
+                                        else if (operator == tokenImage[SUP])
                                                 Yaka.Interpreter.isup();
 
-                                        else if (op == supegal)
+                                        else if (operator == tokenImage[SUPEGAL])
                                                 Yaka.Interpreter.isupegal();
 
-                                        else if (op == egal)
+                                        else if (operator == tokenImage[EGAL])
                                                 Yaka.Interpreter.iegal();
 
-                                        else if (op == diff)
+                                        else if (operator == tokenImage[DIFF])
                                                 Yaka.Interpreter.idiff();
 
                                         else
-                                                {if (true) throw new ParseException("Operateur "+op+" inattendu");}
+                                                {if (true) throw new ParseException("Operateur "+operator+" inattendu");}
                                 }
                         }
                         catch(ParseException e) {
@@ -445,7 +526,7 @@
                         }
       break;
     default:
-      jj_la1[11] = jj_gen;
+      jj_la1[12] = jj_gen;
       ;
     }
   }
@@ -461,40 +542,36 @@
         ;
         break;
       default:
-        jj_la1[12] = jj_gen;
+        jj_la1[13] = jj_gen;
         break label_6;
       }
       opAdd();
       terme();
-                        String t1 = Expression.popType();
-                        String t2 = Expression.popType();
-                        String op = Expression.popOperator();
-
-                        String plus = tokenImage[PLUS];
-                        String moins = tokenImage[MOINS];
-                        String ou = tokenImage[OU];
+                        String type1 = Expression.popType();
+                        String operator = Expression.popOperator();
+                        String type2 = Expression.popType();
 
                         try {
 
-                                String res = Expression.binExprReturn(t1,t2,op);
+                                String newType = Expression.dualOperandType(type1, operator, type2);
 
-                                if(res == tokenImage[ERROR]&& t1 != tokenImage[ERROR] && t2 != tokenImage[ERROR])
-                                        {if (true) throw new ParseException("Operation de type "+t1+" "+op+" "+t2+" interdite");}
+                                if(newType == tokenImage[ERROR] && type1 != tokenImage[ERROR] && type2 != tokenImage[ERROR])
+                                        {if (true) throw new ParseException("Operation de type "+type1+" "+operator+" "+type2+" interdite");}
 
                                 else {
-                                        Expression.addType(res);
+                                        Expression.addType(newType);
 
-                                        if(op == plus)
+                                        if(operator == tokenImage[PLUS])
                                                 Yaka.Interpreter.iadd();
 
-                                        else if (op == moins)
+                                        else if (operator == tokenImage[MOINS])
                                                 Yaka.Interpreter.isub();
 
-                                        else if (op == ou)
+                                        else if (operator == tokenImage[OU])
                                                 Yaka.Interpreter.ior();
 
                                         else
-                                                {if (true) throw new ParseException("Operateur "+op+" innatendu");}
+                                                {if (true) throw new ParseException("Operateur "+operator+" innatendu");}
                                 }
                         }
                         catch(ParseException e) {
@@ -519,40 +596,36 @@
         ;
         break;
       default:
-        jj_la1[13] = jj_gen;
+        jj_la1[14] = jj_gen;
         break label_7;
       }
       opMul();
       facteur();
-                        String t1 = Expression.popType();
-                        String t2 = Expression.popType();
-                        String op = Expression.popOperator();
-
-                        String mul = tokenImage[MUL];
-                        String div = tokenImage[DIV];
-                        String et = tokenImage[ET];
+                        String type1 = Expression.popType();
+                        String operator = Expression.popOperator();
+                        String type2 = Expression.popType();
 
                         try {
 
-                                String res = Expression.binExprReturn(t1,t2,op);
+                                String newType = Expression.dualOperandType(type1, operator, type2);
 
-                                if(res == tokenImage[ERROR] && t1 != tokenImage[ERROR] && t2 != tokenImage[ERROR])
-                                        {if (true) throw new ParseException("Operation de type "+t1+" "+op+" "+t2+" interdite");}
+                                if(newType == tokenImage[ERROR] && type1 != tokenImage[ERROR] && type2 != tokenImage[ERROR])
+                                        {if (true) throw new ParseException("Operation de type "+type1+" "+operator+" "+type2+" interdite");}
 
                                 else {
-                                        Expression.addType(res);
+                                        Expression.addType(newType);
 
-                                        if (op == mul)
+                                        if (operator == tokenImage[MUL])
                                                 Yaka.Interpreter.imul();
 
-                                        else if (op == div)
+                                        else if (operator == tokenImage[DIV])
                                                 Yaka.Interpreter.idiv();
 
-                                        else if(op == et)
+                                        else if(operator == tokenImage[ET])
                                                 Yaka.Interpreter.iand();
 
                                         else
-                                                {if (true) throw new ParseException("Operateur "+op+" innatendu");}
+                                                {if (true) throw new ParseException("Operateur "+operator+" innatendu");}
                                 }
                         }
                         catch(ParseException e) {
@@ -579,27 +652,27 @@
     case NON:
       opNeg();
       primaire();
-                String t = Expression.popType();
-                String op = Expression.popOperator();
+                String type = Expression.popType();
+                String operator = Expression.popOperator();
 
                 try {
 
-                        String res = Expression.unExprReturn(t, op);
+                        String newType = Expression.singleOperandType(operator, type);
 
-                        if(res == tokenImage[ERROR] && t != tokenImage[ERROR])
-                                        {if (true) throw new ParseException("Operation de type "+op+" "+t+" interdite");}
+                        if(newType == tokenImage[ERROR] && type != tokenImage[ERROR])
+                                        {if (true) throw new ParseException("Operation de type "+operator+" "+type+" interdite");}
 
                         else {
-                                Expression.addType(res);
+                                Expression.addType(newType);
 
-                                if(op == tokenImage[MOINS])
+                                if(operator == tokenImage[MOINS])
                                         Yaka.Interpreter.ineg();
 
-                                else if(op == tokenImage[NON])
+                                else if(operator == tokenImage[NON])
                                         Yaka.Interpreter.inot();
 
                                 else
-                                        {if (true) throw new ParseException("Operateur "+op+" innatendu");}
+                                        {if (true) throw new ParseException("Operateur "+operator+" innatendu");}
                         }
                 }
                 catch(ParseException e) {
@@ -612,7 +685,7 @@
                 }
       break;
     default:
-      jj_la1[14] = jj_gen;
+      jj_la1[15] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
@@ -632,7 +705,7 @@
       jj_consume_token(54);
       break;
     default:
-      jj_la1[15] = jj_gen;
+      jj_la1[16] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
@@ -683,7 +756,7 @@
                 Yaka.Interpreter.iconst(Yaka.Interpreter.FALSE);
       break;
     default:
-      jj_la1[16] = jj_gen;
+      jj_la1[17] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
@@ -716,7 +789,7 @@
                 Expression.addOperator(tokenImage[SUPEGAL]);
       break;
     default:
-      jj_la1[17] = jj_gen;
+      jj_la1[18] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
@@ -737,7 +810,7 @@
                 Expression.addOperator(tokenImage[OU]);
       break;
     default:
-      jj_la1[18] = jj_gen;
+      jj_la1[19] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
@@ -758,7 +831,7 @@
                 Expression.addOperator(tokenImage[ET]);
       break;
     default:
-      jj_la1[19] = jj_gen;
+      jj_la1[20] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
@@ -775,7 +848,7 @@
                 Expression.addOperator(tokenImage[NON]);
       break;
     default:
-      jj_la1[20] = jj_gen;
+      jj_la1[21] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
@@ -791,7 +864,7 @@
   static public Token jj_nt;
   static private int jj_ntk;
   static private int jj_gen;
-  static final private int[] jj_la1 = new int[21];
+  static final private int[] jj_la1 = new int[22];
   static private int[] jj_la1_0;
   static private int[] jj_la1_1;
   static {
@@ -799,10 +872,10 @@
       jj_la1_init_1();
    }
    private static void jj_la1_init_0() {
-      jj_la1_0 = new int[] {0x0,0x800000,0x0,0x80000000,0x0,0x20400000,0x0,0x0,0x0,0x80100200,0x0,0x3f000,0x80300,0x40c00,0x80100200,0x80000000,0x80000000,0x3f000,0x80300,0x40c00,0x100200,};
+      jj_la1_0 = new int[] {0x0,0x800000,0x0,0x80000000,0x0,0x20400000,0x0,0x8000000,0x8000000,0x80100200,0x0,0x2000000,0x3f000,0x80300,0x40c00,0x80100200,0x80000000,0x80000000,0x3f000,0x80300,0x40c00,0x100200,};
    }
    private static void jj_la1_init_1() {
-      jj_la1_1 = new int[] {0x2,0x0,0x80000,0x30004,0x80000,0x0,0x100000,0x23800,0x23800,0x270004,0x2800,0x0,0x0,0x0,0x230004,0x230004,0x30004,0x0,0x0,0x0,0x0,};
+      jj_la1_1 = new int[] {0x2,0x0,0x80000,0x30004,0x80000,0x0,0x100000,0x23801,0x23801,0x270004,0x2800,0x0,0x0,0x0,0x0,0x230004,0x230004,0x30004,0x0,0x0,0x0,0x0,};
    }
 
   /** Constructor with InputStream. */
@@ -823,7 +896,7 @@
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 21; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 22; i++) jj_la1[i] = -1;
   }
 
   /** Reinitialise. */
@@ -837,7 +910,7 @@
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 21; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 22; i++) jj_la1[i] = -1;
   }
 
   /** Constructor. */
@@ -854,7 +927,7 @@
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 21; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 22; i++) jj_la1[i] = -1;
   }
 
   /** Reinitialise. */
@@ -864,7 +937,7 @@
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 21; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 22; i++) jj_la1[i] = -1;
   }
 
   /** Constructor with generated Token Manager. */
@@ -880,7 +953,7 @@
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 21; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 22; i++) jj_la1[i] = -1;
   }
 
   /** Reinitialise. */
@@ -889,7 +962,7 @@
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 21; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 22; i++) jj_la1[i] = -1;
   }
 
   static private Token jj_consume_token(int kind) throws ParseException {
@@ -945,7 +1018,7 @@
       la1tokens[jj_kind] = true;
       jj_kind = -1;
     }
-    for (int i = 0; i < 21; i++) {
+    for (int i = 0; i < 22; i++) {
       if (jj_la1[i] == jj_gen) {
         for (int j = 0; j < 32; j++) {
           if ((jj_la1_0[i] & (1<<j)) != 0) {

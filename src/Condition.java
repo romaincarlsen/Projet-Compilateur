@@ -1,50 +1,39 @@
 
 import java.util.HashMap;
-import java.util.ArrayList;
 
 public class Condition {
-	
+
+	/**
+	 * Pour garder le compte de chaque label
+	 */
 	public static HashMap<String, Integer> labels = new HashMap<String, Integer>();
 
 	/**
-	 *  Constructeur
+	 * Permet de générer un nouveau label au format :
+	 * SINON1, SINON2, SINON3...
+	 * FSI1, FSI2, FSI3...
 	 */
-	public Condition() {
-		
-	}
-	
 	public static String getLabel(String label) {
 		// On suppime les " autour du label donné par YakaTokenManager
-		String label = label.replaceAll("\"$|^\"", "");
+		label = label.replaceAll("\"$|^\"", "");
+
+		// On récupère le comptes des labels déjà présents
 		Integer labelCount = (Integer) labels.get(label);
-		
+
+		// Si il n'existe pas on l'initialise à 1 et on l'ajoute à la liste
 		if(labelCount == null) {
 			labelCount = 1;
-			labels.add(label, labelCount);
+			labels.put(label, labelCount);
 		}
+		// Sinon on l'incrémente et on met à jour la liste
 		else {
 			labelCount++;
 			labels.put(label, labelCount);
 		}
-		
+
+		// On retourne l'étiquette générée
 		return label+labelCount;
 	}
-	
-	public static String finSi() {
-		String fsi = "FSI";
-		Integer fsiLabelsCount = (Integer) labels.get(fsi);
-		
-		if(fsiLabelsCount == null) {
-			fsiLabelsCount = 1;
-			labels.add(fsi, fsiLabelsCount);
-		}
-		else {
-			fsiLabelsCount++;
-			labels.put(fsi, fsiLabelsCount);
-		}
-		
-		return fsi+fsiLabelsCount;
-	}
-	
+
 }
 

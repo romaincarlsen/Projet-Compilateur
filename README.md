@@ -1,4 +1,4 @@
-Projet Compilo
+﻿Projet Compilo
 =============
 
 Projet Compilateur pour Eclipse, INSA Rennes
@@ -37,12 +37,12 @@ Bin à rajouter au PATH de l'environnement
 
 Commande à exécuter dans le Terminal (se placer dans src)
 -------------
-<code>javacc Yaka.jj & javac *.java</code>
+<code>javacc Yaka.jj & javac *.java</code>  
 <code>java Yaka ../tests/fichier_test</code>
 
 
 Commande à exécuter dans DosBox (se placer dans outputs)
 -------------
-<code>c:tasm fichier_test.asm</code>
-<code>c:tlink fichier_test libraries/biblio</code>
+<code>c:tasm fichier_test.asm</code>  
+<code>c:tlink fichier_test libraries/biblio</code>  
 <code>fichier_test</code>

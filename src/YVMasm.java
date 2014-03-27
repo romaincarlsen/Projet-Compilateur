@@ -3,9 +3,11 @@ import java.util.ArrayList;
 
 public class YVMasm extends YVM {
 
-	private ArrayList<String> data = new ArrayList<String>();
+	// Liste des librairies qui seront à importer
 	private ArrayList<String> libraries = new ArrayList<String>();
-	private int dataCpt = 0;
+
+	// Liste des données qui seront à mettre dans le .DATA
+	private ArrayList<String> data = new ArrayList<String>();
 
 
 	// Création d'un nouveau fichier pour l'enregistrement de la compilation
@@ -317,7 +319,7 @@ public class YVMasm extends YVM {
 
 	@Override
 	public void jump(String label) {
-		code += "; jump "+label+"\n";
+		code += "; goto "+label+"\n";
 		code += "\tjmp "+label+"\n";
 		code += "\n";
 	}
@@ -398,5 +400,10 @@ public class YVMasm extends YVM {
 		code += "\t"+"call "+library+"\n";
 		code += "\n";
 	}
+
+	public void label(String label) {
+		code += label + ":\n";
+	}
+
 
 }

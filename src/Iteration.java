@@ -1,19 +1,38 @@
 
+import java.util.HashMap;
+
 public class Iteration {
 
 	/**
-	 *  Constructeur
+	 * Pour garder le compte de chaque label
 	 */
-	public Iteration() {
-		
-	} 
+	public static HashMap<String, Integer> labels = new HashMap<String, Integer>();
 
-	
 	/**
-	 *  Lecture d'une itération
+	 * Permet de générer un nouveau label au format :
+	 * FAIRE1, FAIRE2, FAIRE3...
+	 * FAIT1, FAIT2, FAIT3...
 	 */
-	public void iteration() {
-		
+	public static String getLabel(String label) {
+		// On suppime les " autour du label donné par YakaTokenManager
+		label = label.replaceAll("\"$|^\"", "");
+
+		// On récupère le comptes des labels déjà présents
+		Integer labelCount = (Integer) labels.get(label);
+
+		// Si il n'existe pas on l'initialise à 1 et on l'ajoute à la liste
+		if(labelCount == null) {
+			labelCount = 1;
+			labels.put(label, labelCount);
+		}
+		// Sinon on l'incrémente et on met à jour la liste
+		else {
+			labelCount++;
+			labels.put(label, labelCount);
+		}
+
+		// On retourne l'étiquette générée
+		return label+labelCount;
 	}
 
 }
