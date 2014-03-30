@@ -109,14 +109,6 @@ PARSER_BEGIN(Yaka)
 			}
 		}
 
-
-		/**
-		 *  Lecture d'un programme
-		 */
-		public void prog() {
-
-		}
-
 	}
 
 PARSER_END(Yaka)
@@ -216,16 +208,23 @@ TOKEN  : {
 
 
 
-/**************************************/
-/********debut de la grammaire ********/
-/**************************************/
+
+
+
+
+/**
+ * ===============================================================
+ * =================== *** __ Grammaire __ *** ===================
+ * ===============================================================
+ */
 
 void analyse() : {} {
-	<PROGRAMME> <ident>{
+	<PROGRAMME> {
 		Yaka.Interpreter.entete();
 	}
+	<ident>
 	bloc()
-	<FPROGRAMME>{
+	<FPROGRAMME> {
 		Yaka.Interpreter.queue();
 	}
 }
@@ -234,12 +233,36 @@ void analyse() : {} {
 void bloc() : {} {
 	(declConst())*
 	(declVar())* {
+		// Todo voir s'il ne serait pas mieux d'y mettre ailleur
 		Yaka.Interpreter.ouvrePrinc(IdentArray.nbVar());
 	}
+	(declFonction())*
 	suiteInstr()
 }
 
 
+void type() : {} {
+	(<ENTIER>) {
+	  	IdentArray.lastType = tokenImage[ENTIER];
+	}
+
+	| (<BOOLEEN>) {
+		IdentArray.lastType = tokenImage[BOOLEEN];
+	}
+}
+
+
+
+
+
+
+/**
+ * ====================================================
+ * =================== Déclarations ===================
+ * ====================================================
+ */
+
+// CONST type constante, constante, ... ;
 void declConst() : {} {
 	<CONST>
 	defConst()
@@ -254,7 +277,7 @@ void defConst() : {} {
 			IdentArray.lastIdent = YakaTokenManager.identLu;
 		}
 
-		"=" valConst()
+		<EGAL> valConst()
 	) {
 		IdentArray.add(IdentArray.lastIdent, new IdConst(IdentArray.lastValue, IdentArray.lastType));
 	}
@@ -301,6 +324,7 @@ void valConst() : {} {
 }
 
 
+// VAR type variable, variable, ... ;
 void declVar() : {} {
 	<VAR> type()
 	(<ident>) {
@@ -324,20 +348,37 @@ void declVar() : {} {
 }
 
 
-void type() :{} {
-	(<ENTIER>) {
-	  	IdentArray.lastType = tokenImage[ENTIER];
-	}
-
-	| (<BOOLEEN>) {
-		IdentArray.lastType = tokenImage[BOOLEEN];
-	}
+// type FONCTION fonction(type variable, type variable, ...)
+//     instructions
+//     RETOURNE (variable | expression)
+// FFONCTION
+void declFonction() : {} {
+	// Todo : vérifier que la valeur de retour correspondent et que la déclaration de fonction soit unique
+	// Les variables déclarées dans la fonction ne doivent pas être accessible depuis l'extérieur
+	// (les détruires ou bien préciser à quel programme elles appartiennent)
+	type()
+	<FONCTION>
+	<ident>
+	"("
+		(
+			( type() <ident> )
+			( "," ( type() <ident> ) )*
+		)?
+	")"
+	(declVar())*
+	suiteInstr()
+	<RETOURNE>( expression() )
+	<FFONCTION>
 }
 
 
+
 /**
- * Syntaxe des instructions
+ * ====================================================
+ * =================== Instructions ===================
+ * ====================================================
  */
+
 void suiteInstr() : {} {
 	instruction()
 	( ";" (instruction())? )*
@@ -349,10 +390,12 @@ void instruction() : {} {
 	lecture()|
 	ecriture()|
 	boucle()|
-	conditionnel()
+	conditionnel()/*|
+	fonction()*/
 }
 
 
+// variable = (expression | variable | constante)
 void affectation() : {} {
 	(<ident>) {
 		Ident affectId = IdentArray.get(YakaTokenManager.identLu);
@@ -370,25 +413,28 @@ void affectation() : {} {
 		}
 
 	}
-	(<EGAL> expression()) {
+	// Todo : fonction
+	(<EGAL> (expression()/* | fonction()*/) ) {
 		Yaka.Interpreter.affect(affectId);
 	}
 }
 
 
+// LIRE(variable)
 void lecture() : {} {
+	// Todo : véririfier que la lecture ce fait sur une variable
 	(<LIRE>"("<ident>")") {
 		Yaka.Interpreter.lireEnt(IdentArray.get(YakaTokenManager.identLu));
 	}
 }
 
 
+// ECRIRE(chaine)
 void ecriture() : {} {
 
 	(<ECRIRE>"("
 
 		(expression() {
-			// Todo
 			Yaka.Interpreter.ecrireEnt();
 		}
 		| <chaine> {
@@ -402,6 +448,10 @@ void ecriture() : {} {
 	}
 }
 
+
+// TANTQUE condition FAIRE
+//     instructions
+// FAIT
 void boucle() : {} {
 	{
 		// Génération des étiquettes de saut avec incrémentation du numéro
@@ -444,6 +494,11 @@ void boucle() : {} {
 }
 
 
+// SI condition ALORS
+//     instructions
+// SINON
+//     instructions
+// FSI
 void conditionnel() : {} {
 	{
 		// Génération des étiquettes de saut avec incrémentation du numéro
@@ -489,9 +544,35 @@ void conditionnel() : {} {
 	}
 }
 
+
+// variable = fonction(variable, variable, ...)
+void fonction() : {} {
+
+	// Todo : faire l'affection de la valeur de retour (et vérifier son type) de la fonction
+	//(<ident> <EGAL>)?
+
+	// Todo : vérifier que la fonction appelé existe
+	// et que le bon nombre de paramètres (chacun avec le bon type) est passé
+	<ident>
+	"("
+		(
+			( expression() )
+			( "," expression() )*
+		)?
+	")"
+}
+
+
+
+
+
+
 /**
- * Expression
+ * ===================================================
+ * =================== Expressions ===================
+ * ===================================================
  */
+
 void expression() : {} {
 
 	simpleExpr()
