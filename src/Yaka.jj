@@ -223,7 +223,10 @@ void analyse() : {} {
 		Yaka.Interpreter.entete();
 	}
 	<ident>
+	(declFonction())*
+	<PRINCIPAL>
 	bloc()
+	<FPRINCIPAL>
 	<FPROGRAMME> {
 		Yaka.Interpreter.queue();
 	}
@@ -236,7 +239,6 @@ void bloc() : {} {
 		// Todo voir s'il ne serait pas mieux d'y mettre ailleur
 		Yaka.Interpreter.ouvrePrinc(IdentArray.nbVar());
 	}
-	(declFonction())*
 	suiteInstr()
 }
 
@@ -359,16 +361,23 @@ void declFonction() : {} {
 	type()
 	<FONCTION>
 	<ident>
+	paramForms()
+	bloc()
+	<FFONCTION>
+}
+
+void paramForms() : {} {
 	"("
 		(
-			( type() <ident> )
-			( "," ( type() <ident> ) )*
+			paramForm()
+			( "," paramForm() )*
 		)?
 	")"
-	(declVar())*
-	suiteInstr()
-	<RETOURNE>( expression() )
-	<FFONCTION>
+}
+
+void paramForm():{} {
+	type() <ident>
+
 }
 
 
@@ -390,8 +399,8 @@ void instruction() : {} {
 	lecture()|
 	ecriture()|
 	boucle()|
-	conditionnel()/*|
-	fonction()*/
+	conditionnel()|
+	retourne()
 }
 
 
@@ -546,20 +555,15 @@ void conditionnel() : {} {
 
 
 // variable = fonction(variable, variable, ...)
-void fonction() : {} {
+void retourne() : {} {
 
 	// Todo : faire l'affection de la valeur de retour (et vérifier son type) de la fonction
 	//(<ident> <EGAL>)?
 
 	// Todo : vérifier que la fonction appelé existe
 	// et que le bon nombre de paramètres (chacun avec le bon type) est passé
-	<ident>
-	"("
-		(
-			( expression() )
-			( "," expression() )*
-		)?
-	")"
+	<RETOURNE> expression()
+	
 }
 
 
@@ -777,7 +781,7 @@ void valeur() : {} {
 		Yaka.Interpreter.iconst(YakaTokenManager.entierLu);
 	}
 
-	| <ident> {
+	| (<ident>  {
 		try {
 			Ident id = IdentArray.get(YakaTokenManager.identLu);
 
@@ -803,6 +807,7 @@ void valeur() : {} {
 			Writer.errorln(error.getMessage());
 		}
 	}
+	(argumentsFonction())?)
 
 	| <VRAI> 	{
 		Expression.addType(tokenImage[BOOLEEN]);
@@ -882,6 +887,10 @@ void opNeg() : {} {
 	| <NON> {
 		Expression.addOperator(tokenImage[NON]);
 	}
+}
+
+void argumentsFonction(): {} {
+	"(" (expression() (","expression())* )? ")" 	
 }
 
 
