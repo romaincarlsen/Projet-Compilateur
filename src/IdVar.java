@@ -1,3 +1,4 @@
+import java.util.* ;
 
 public class IdVar extends Ident {
 
@@ -20,11 +21,40 @@ public class IdVar extends Ident {
 		public boolean isConst() {
 			return false ;
 		}
+		
+		public boolean isFunction() {
+			return false ;
+		}
+		
 
 		public Integer getValue() {
 			return offset;
 		}
-
+		
+		public  void setValue(int val) {
+			offset = val ;
+		}
+		
+		public HashMap<String, Ident> getParams() {
+			return null ;
+		}
+		
+		public Ident getParam(String s) {
+			return null ;	
+		}
+		
+		public void addParam(String s, Ident id) {
+				
+		}
+		
+		public int nbParams() {
+			return 0 ;
+		}
+		
+		public void sortParams() {
+			
+		}
+		
 		/**
 		 *  Retourne une variable sous forme de chaine
 		 */

@@ -6,14 +6,17 @@ public class IdentArray {
 
 
 		// Tableau des identfiants
-		public static HashMap<String, Ident> identArray = new HashMap<String, Ident>();
+		public static HashMap<String, Ident> globaux = new HashMap<String, Ident>();
+		public static HashMap<String, Ident> locaux = new HashMap<String, Ident>();
 
 		// Variables pour l'ajout d'un ident
 		public static String lastIdent;
 		public static String lastType;
 		public static Integer lastValue;
-		public static int currentOffset = 0;
-
+		public static int offsetVar = 0;
+		public static int offsetParam = 2;
+		
+		public static String currentNameFunction = "" ;
 
 		/**
 		 *  Constructeur d'un identifiant
@@ -26,55 +29,112 @@ public class IdentArray {
 		/**
 		 *  Récupération d'un identifiant
 		 */
-		public static Ident get(String s) {
-			if(has(s)) {
-				return identArray.get(s);
+		public static Ident getLocal(String s) {
+			if(hasLocal(s)) {
+				return locaux.get(s);
 			}
 			else {
 				return null;
 			}
 		}
 
+		/**
+		 *  Récupération d'un identifiant
+		 */
+		public static Ident getGlobal(String s) {
+			if(hasGlobal(s)) {
+				return globaux.get(s);
+			}
+			else {
+				return null;
+			}
+		}
 
 		/**
 		 *  Vérifie l'existence d'un identifiant
 		 */
-		public static boolean has(String s) {
-			return identArray.containsKey(s);
+		public static boolean hasLocal(String s) {
+			return locaux.containsKey(s);
 		}
-
+		
 		/**
-		 *  Ajout d'un identifiant
+		 *  Vérifie l'existence d'un identifiant
 		 */
-		public static void add(String s, Ident i) {
-			identArray.put(s, i);
+		public static boolean hasGlobal(String s) {
+			return globaux.containsKey(s);
+		}
+		
+		/**
+		 *  Ajout d'un identifiant global
+		 */
+		public static void addGlobal(String s, Ident i) {
+			globaux.put(s, i);
+		}
+		
+		/**
+		 *  Ajout d'un identifiant local
+		 */
+		public static void addLocal(String s, Ident i) {
+			locaux.put(s, i);
 		}
 
+		public static void addParam(String idFunction, String s, Ident param) {
+			globaux.get(idFunction).addParam(s, param) ;			
+		}
+
+		public static void sortParams(String idFunction) {
+			globaux.get(idFunction).sortParams() ;
+		}
 
 		public static int nbVar() {
-			int nb = 0 ;
-			for(String key : identArray.keySet())
-				if (identArray.get(key).isVar())
-					nb++ ;
-			return nb*2 ;
+			return locaux.size() * 2 ;
 		}
 
 		/**
 		 *  Ajout d'un identifiant
 		 */
-		public static void shiftOffset() {
-			currentOffset -= 2;
+		public static void shiftOffsetVar() {
+			offsetVar -= 2;
+		}
+		
+		/**
+		 *  Ajout d'un identifiant
+		 */
+		public static void shiftOffsetParam() {
+			offsetParam += 2;
 		}
 
+		/**
+		 *  init d'un identifiant
+		 */
+		public static void initOffsetVar() {
+			offsetVar = 0 ;
+		}
+		
+		/**
+		 *  init d'un identifiant
+		 */
+		public static void initOffsetParam() {
+			offsetParam = 2 ;
+		}
 
+		public static void cleanLocaux() {
+			locaux.clear() ;
+		}
+		
 		/**
 		 *  Conversion en String du tableau d'identifiant
 		 */
 		public static String string() {
 			String s = "";
-
-			for(String key : identArray.keySet()) {
-				Ident i = identArray.get(key);
+			s += "Locaux :\n" ;
+			for(String key : locaux.keySet()) {
+				Ident i = locaux.get(key);
+				s += key+", "+i.toString()+"\n";
+			}
+			s += "Globaux :\n" ;
+			for(String key : globaux.keySet()) {
+				Ident i = globaux.get(key);
 				s += key+", "+i.toString()+"\n";
 			}
 

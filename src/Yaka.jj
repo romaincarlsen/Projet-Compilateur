@@ -41,7 +41,7 @@ PARSER_BEGIN(Yaka)
 				try {
 					String pathToFile = args[args.length-1];
 					String[] explodePath = pathToFile.split("/");
-
+					
 					// Le nom du fichier de sortie est le même avec l'extension ".asm" dans le dossier "outputs"
 					scriptOutputName = scriptOutputName.replace("{{FILENAME}}", explodePath[explodePath.length - 1]);
 
@@ -82,6 +82,8 @@ PARSER_BEGIN(Yaka)
 				analyzer = new Yaka(input);
 				analyzer.analyse();
 
+				System.out.println(IdentArray.string()) ;
+				
 				if(!err) {
 
 					Writer.println("Analyse Syntaxique terminee !\n");
@@ -95,7 +97,9 @@ PARSER_BEGIN(Yaka)
 					// On créer le script YVM
 					Interpreter.outputSave();
 
+					
 					Writer.println("Programme de sortie : "+scriptOutputName+"\n");
+					
 				}
 
 			}
@@ -224,7 +228,9 @@ void analyse() : {} {
 	}
 	<ident>
 	(declFonction())*
-	<PRINCIPAL>
+	<PRINCIPAL>	{
+				Yaka.Interpreter.label("main") ;		
+			}
 	bloc()
 	<FPRINCIPAL>
 	<FPROGRAMME> {
@@ -236,10 +242,11 @@ void analyse() : {} {
 void bloc() : {} {
 	(declConst())*
 	(declVar())* {
-		// Todo voir s'il ne serait pas mieux d'y mettre ailleur
-		Yaka.Interpreter.ouvrePrinc(IdentArray.nbVar());
-	}
-	suiteInstr()
+			Yaka.Interpreter.ouvrebloc(IdentArray.nbVar());
+			}
+	suiteInstr() {
+			Yaka.Interpreter.fermebloc(IdentArray.nbParams());
+			}
 }
 
 
@@ -281,7 +288,7 @@ void defConst() : {} {
 
 		<EGAL> valConst()
 	) {
-		IdentArray.add(IdentArray.lastIdent, new IdConst(IdentArray.lastValue, IdentArray.lastType));
+		IdentArray.addLocal(IdentArray.lastIdent, new IdConst(IdentArray.lastValue, IdentArray.lastType));
 	}
 }
 
@@ -294,7 +301,7 @@ void valConst() : {} {
 
 	| (<ident>) {
 		try {
-			IdConst id = (IdConst) IdentArray.get(YakaTokenManager.identLu);
+			IdConst id = (IdConst) IdentArray.getLocal(YakaTokenManager.identLu);
 
 			if(id == null)
 				throw new ParseException("Identifiant \""+YakaTokenManager.identLu+"\" non declare");
@@ -330,19 +337,19 @@ void valConst() : {} {
 void declVar() : {} {
 	<VAR> type()
 	(<ident>) {
-		IdentArray.shiftOffset();
-		IdentArray.add(
+		IdentArray.shiftOffsetVar();
+		IdentArray.addLocal(
 			YakaTokenManager.identLu,
-			new IdVar(IdentArray.currentOffset, IdentArray.lastType)
+			new IdVar(IdentArray.offsetVar, IdentArray.lastType)
 		);
 	}
 	(
 		","
 		(<ident>) {
-			IdentArray.shiftOffset();
-			IdentArray.add(
+			IdentArray.shiftOffsetVar();
+			IdentArray.addLocal(
 				YakaTokenManager.identLu,
-				new IdVar(IdentArray.currentOffset, IdentArray.lastType)
+				new IdVar(IdentArray.offsetVar, IdentArray.lastType)
 			);
 		}
 	)*
@@ -360,10 +367,23 @@ void declFonction() : {} {
 	// (les détruires ou bien préciser à quel programme elles appartiennent)
 	type()
 	<FONCTION>
-	<ident>
-	paramForms()
+	<ident>		 {
+			IdentArray.currentNameFunction = YakaTokenManager.identLu ;
+			IdentArray.addGlobal(
+				IdentArray.currentNameFunction,
+				new IdFunction(IdentArray.lastType)
+			);
+			Yaka.Interpreter.label(IdentArray.currentNameFunction) ;
+			}
+	paramForms() 	{
+			}
 	bloc()
-	<FFONCTION>
+	<FFONCTION>	{
+				IdentArray.sortParams(IdentArray.currentNameFunction) ;
+				IdentArray.initOffsetParam() ;
+				IdentArray.cleanLocaux() ;
+				IdentArray.initOffsetVar() ;
+			}
 }
 
 void paramForms() : {} {
@@ -376,7 +396,10 @@ void paramForms() : {} {
 }
 
 void paramForm():{} {
-	type() <ident>
+	type() <ident> 		{
+					IdentArray.shiftOffsetParam();
+					IdentArray.addParam(IdentArray.currentNameFunction, YakaTokenManager.identLu, new IdVar(IdentArray.offsetParam,IdentArray.lastType)) ;
+				}
 
 }
 
@@ -407,7 +430,8 @@ void instruction() : {} {
 // variable = (expression | variable | constante)
 void affectation() : {} {
 	(<ident>) {
-		Ident affectId = IdentArray.get(YakaTokenManager.identLu);
+				
+		Ident affectId = IdentArray.getLocal(YakaTokenManager.identLu);
 		try {
 			if(affectId.isConst())
 				throw new ParseException("Affectation impossible sur une constante");
@@ -433,7 +457,7 @@ void affectation() : {} {
 void lecture() : {} {
 	// Todo : véririfier que la lecture ce fait sur une variable
 	(<LIRE>"("<ident>")") {
-		Yaka.Interpreter.lireEnt(IdentArray.get(YakaTokenManager.identLu));
+		Yaka.Interpreter.lireEnt(IdentArray.getLocal(YakaTokenManager.identLu));
 	}
 }
 
@@ -562,8 +586,9 @@ void retourne() : {} {
 
 	// Todo : vérifier que la fonction appelé existe
 	// et que le bon nombre de paramètres (chacun avec le bon type) est passé
-	<RETOURNE> expression()
-	
+	<RETOURNE> expression() 	{
+						Yaka.Interpreter.retourne(IdentArray.getGlobal(IdentArray.currentNameFunction).nbParams() + 4);
+					}
 }
 
 
@@ -783,20 +808,35 @@ void valeur() : {} {
 
 	| (<ident>  {
 		try {
-			Ident id = IdentArray.get(YakaTokenManager.identLu);
-
+			
+			Ident id = IdentArray.getLocal(YakaTokenManager.identLu) ;
+			if (id == null)
+				id = IdentArray.getGlobal(IdentArray.currentNameFunction).getParam(YakaTokenManager.identLu) ;
+			if (id == null) {
+				id = IdentArray.getGlobal(YakaTokenManager.identLu) ;
+				if (id != null)
+					IdentArray.currentNameFunction = YakaTokenManager.identLu ;
+			}
+			
 			if(id == null){
+				
 				Expression.addType(YakaConstants.tokenImage[YakaConstants.ERROR]);
 				throw new ParseException("Identifiant \""+YakaTokenManager.identLu+"\" non declare");
 			}
 
-			Expression.addType(IdentArray.get(YakaTokenManager.identLu).type);
+			Expression.addType(id.type);
 
 			if(id.isVar())
 				Yaka.Interpreter.iload(id.getValue());
 
-			else if(id.isConst())
-				Yaka.Interpreter.iconst(id.getValue());
+			else {
+				if(id.isConst())
+					Yaka.Interpreter.iconst(id.getValue());
+				else
+					if (id.isFunction()) {
+						Yaka.Interpreter.reserveRetour() ;
+					}
+			}
 		}
 		catch(ParseException e) {
 			err = true;
@@ -807,7 +847,9 @@ void valeur() : {} {
 			Writer.errorln(error.getMessage());
 		}
 	}
-	(argumentsFonction())?)
+	(argumentsFonction())?) {
+				Yaka.Interpreter.call(IdentArray.currentNameFunction);
+				}
 
 	| <VRAI> 	{
 		Expression.addType(tokenImage[BOOLEEN]);

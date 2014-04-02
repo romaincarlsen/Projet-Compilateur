@@ -1,3 +1,4 @@
+import java.util.* ;
 
 public class IdConst extends Ident {
 
@@ -20,11 +21,39 @@ public class IdConst extends Ident {
 		public boolean isConst() {
 			return true ;
 		}
+		
+		public boolean isFunction() {
+			return false ;
+		}
 
 		public Integer getValue() {
 			return value ;
 		}
 
+		public  void setValue(int val) {
+			value = val ;
+		}
+		
+		public HashMap<String, Ident> getParams() {
+			return null;
+		}
+		
+		public Ident getParam(String s) {
+			return null ;	
+		}
+		
+		public void addParam(String s, Ident id) {
+				
+		}
+		
+		public int nbParams() {
+			return 0 ;
+		}
+		
+		public void sortParams() {
+			
+		}
+		
 		/**
 		 *  Retourne une constante sous forme de chaine
 		 */

@@ -37,9 +37,7 @@ Bin à rajouter au PATH de l'environnement
 
 Commande à exécuter dans le Terminal (se placer dans src)
 -------------
-<code>javacc Yaka.jj & javac *.java</code>  
-<code>java Yaka ../tests/fichier_test</code>
-
+<code>javacc Yaka.jj & javac *.java & java Yaka ../tests/fichier_test</code>
 
 Commande à exécuter dans DosBox (se placer dans outputs)
 -------------
