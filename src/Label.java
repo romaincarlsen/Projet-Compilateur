@@ -1,7 +1,7 @@
 
 import java.util.HashMap;
 
-public class Condition {
+public class Label {
 
 	/**
 	 * Pour garder le compte de chaque label
@@ -9,31 +9,32 @@ public class Condition {
 	public static HashMap<Integer, Integer> labels = new HashMap<Integer, Integer>();
 
 	/**
-	 * Permet de générer un nouveau label au format :
+	 * Permet de gÃ©nÃ©rer un nouveau label au format :
+	 * SINON1, SINON2, SINON3...
+	 * FSI1, FSI2, FSI3...
 	 * FAIRE1, FAIRE2, FAIRE3...
 	 * FAIT1, FAIT2, FAIT3...
 	 */
-	public static String getLabel(Integer label) {
-		// On suppime les " autour du label donné par YakaConstants
+	public static String get(Integer label) {
+		// On suppime les " autour du label donnÃ© par YakaConstants
 		String strLabel = YakaConstants.tokenImage[label].replaceAll("\"$|^\"", "");
 
-		// On récupère le comptes des labels déjà présents
+		// On rÃ©cupÃ¨re le comptes des labels dÃ©jÃ  prÃ©sents
 		Integer labelCount = (Integer) labels.get(label);
 
-		// Si il n'existe pas on l'initialise à 1 et on l'ajoute à la liste
+		// Si il n'existe pas on l'initialise Ã  1 et on l'ajoute Ã  la liste
 		if(labelCount == null) {
 			labelCount = 1;
 			labels.put(label, labelCount);
 		}
-		// Sinon on l'incrémente et on met à jour la liste
+		// Sinon on l'incrÃ©mente et on met Ã  jour la liste
 		else {
 			labelCount++;
 			labels.put(label, labelCount);
 		}
 
-		// On retourne l'étiquette générée avec le compteut incrémenté
+		// On retourne l'Ã©tiquette gÃ©nÃ©rÃ©e avec le compteut incrÃ©mentÃ©
 		return strLabel+labelCount;
 	}
 
 }
-

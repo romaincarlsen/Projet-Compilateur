@@ -15,7 +15,6 @@ public class YVM {
 	public static final Integer FALSE = 0;
 
 
-
 	// Création d'un nouveau fichier pour l'enregistrement de la compilation
 	public YVM(String inputFilename) {
 		scriptOutputFilename = scriptOutputFilename.replace("{{FILENAME}}", inputFilename);

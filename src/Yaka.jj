@@ -86,7 +86,7 @@ PARSER_BEGIN(Yaka)
 					//Writer.println(IdentArray.string());
 
 					// On affiche le resultat du tableau d'expression
-					//Writer.println(Expression.string()) ;
+					//Writer.println(Expression.string());
 
 					// On créer le script YVM
 					Interpreter.outputSave();
@@ -213,9 +213,11 @@ void analyse() : {} {
 	}
 	<ident>
 	(declFonction())*
-	//<PRINCIPAL>
+	<PRINCIPAL>	{
+		Yaka.Interpreter.label("main");
+	}
 	bloc()
-	//<FPRINCIPAL>
+	<FPRINCIPAL>
 	<FPROGRAMME> {
 		Yaka.Interpreter.queue();
 	}
@@ -225,9 +227,14 @@ void analyse() : {} {
 void bloc() : {} {
 	(declConst())*
 	(declVar())* {
-		Yaka.Interpreter.ouvrePrinc(IdentArray.nbVar());
+		// Todo : On utilise plus jamais ouvrePrinc ?
+		//Yaka.Interpreter.ouvrePrinc(IdentArray.nbVar());
+		Yaka.Interpreter.ouvreBloc(IdentArray.nbVar());
 	}
-	suiteInstr()
+	suiteInstr() {
+		// Todo : IdentArray.nbParams() n'existe pas
+		//Yaka.Interpreter.fermeBloc(IdentArray.nbParams());
+	}
 }
 
 
@@ -252,7 +259,7 @@ void type() : {} {
  * ====================================================
  */
 
-// CONST type constante, constante, ... ;
+// CONST type constante, constante, ...;
 void declConst() : {} {
 	<CONST>
 	defConst()
@@ -269,7 +276,7 @@ void defConst() : {} {
 
 		<EGAL> valConst()
 	) {
-		IdentArray.add(IdentArray.lastIdent, new IdConst(IdentArray.lastValue, IdentArray.lastType));
+		IdentArray.addLocal(IdentArray.lastIdent, new IdConst(IdentArray.lastValue, IdentArray.lastType));
 	}
 }
 
@@ -282,7 +289,7 @@ void valConst() : {} {
 
 	| (<ident>) {
 		try {
-			IdConst id = (IdConst) IdentArray.get(YakaTokenManager.identLu);
+			IdConst id = (IdConst) IdentArray.getLocal(YakaTokenManager.identLu);
 
 			if(id == null)
 				throw new ParseException("Identifiant \""+YakaTokenManager.identLu+"\" non declare");
@@ -309,23 +316,23 @@ void valConst() : {} {
 }
 
 
-// VAR type variable, variable, ... ;
+// VAR type variable, variable, ...;
 void declVar() : {} {
 	<VAR> type()
 	(<ident>) {
-		IdentArray.shiftOffset();
-		IdentArray.add(
+		IdentArray.shiftOffsetVar();
+		IdentArray.addLocal(
 			YakaTokenManager.identLu,
-			new IdVar(IdentArray.currentOffset, IdentArray.lastType)
+			new IdVar(IdentArray.offsetVar, IdentArray.lastType)
 		);
 	}
 	(
 		","
 		(<ident>) {
-			IdentArray.shiftOffset();
-			IdentArray.add(
+			IdentArray.shiftOffsetVar();
+			IdentArray.addLocal(
 				YakaTokenManager.identLu,
-				new IdVar(IdentArray.currentOffset, IdentArray.lastType)
+				new IdVar(IdentArray.offsetVar, IdentArray.lastType)
 			);
 		}
 	)*
@@ -334,7 +341,7 @@ void declVar() : {} {
 
 
 // type FONCTION fonction(type variable, type variable, ...)
-//     instructions
+//     bloc
 //     RETOURNE (variable | expression)
 // FFONCTION
 void declFonction() : {} {
@@ -343,10 +350,22 @@ void declFonction() : {} {
 	// (les détruires ou bien préciser à quel programme elles appartiennent)
 	type()
 	<FONCTION>
-	<ident>
+	<ident> {
+		IdentArray.currentNameFunction = YakaTokenManager.identLu;
+		IdentArray.addGlobal(
+			IdentArray.currentNameFunction,
+			new IdFunction(IdentArray.lastType)
+		);
+		Yaka.Interpreter.label(IdentArray.currentNameFunction);
+	}
 	paramForms()
 	bloc()
-	<FFONCTION>
+	<FFONCTION>	{
+		IdentArray.sortParams(IdentArray.currentNameFunction);
+		IdentArray.initOffsetParam();
+		IdentArray.cleanLocaux();
+		IdentArray.initOffsetVar();
+	}
 }
 
 void paramForms() : {} {
@@ -359,8 +378,14 @@ void paramForms() : {} {
 }
 
 void paramForm():{} {
-	type() <ident>
-
+	type() <ident> {
+		IdentArray.shiftOffsetParam();
+		IdentArray.addParam(
+			IdentArray.currentNameFunction,
+			YakaTokenManager.identLu,
+			new IdVar(IdentArray.offsetParam, IdentArray.lastType)
+		);
+	}
 }
 
 
@@ -390,18 +415,18 @@ void instruction() : {} {
 // variable = (expression | variable | constante)
 void affectation() : {} {
 	(<ident>) {
-		Ident affectId = IdentArray.get(YakaTokenManager.identLu);
+
+		Ident affectId = IdentArray.getLocal(YakaTokenManager.identLu);
 		try {
 			if(affectId.isConst())
 				throw new ParseException("Affectation impossible sur une constante");
 		}
 		catch(ParseException e) {
-			MyError.report("Erreur affectation", e);
+			MyError.report("Erreur d'affectation", e);
 		}
 
 	}
-	// Todo : fonction
-	(<EGAL> (expression()/* | fonction()*/) ) {
+	(<EGAL> (expression()) ) {
 		Yaka.Interpreter.affect(affectId);
 	}
 }
@@ -411,7 +436,7 @@ void affectation() : {} {
 void lecture() : {} {
 	(<LIRE>"("<ident>")") {
 		try {
-			Ident id = IdentArray.get(YakaTokenManager.identLu);
+			Ident id = IdentArray.getLocal(YakaTokenManager.identLu);
 			if(id.isVar()) {
 				Yaka.Interpreter.lireEnt(id);
 			}
@@ -452,8 +477,8 @@ void ecriture() : {} {
 void boucle() : {} {
 	{
 		// Génération des étiquettes de saut avec incrémentation du numéro
-		String faire = Condition.getLabel(FAIRE);
-		String fait = Condition.getLabel(FAIT);
+		String faire = Label.get(FAIRE);
+		String fait = Label.get(FAIT);
 	}
 	<TANTQUE> {
 		// Ajout de l'étiquette de début de boucle
@@ -494,8 +519,8 @@ void boucle() : {} {
 void conditionnel() : {} {
 	{
 		// Génération des étiquettes de saut avec incrémentation du numéro
-		String sinon = Condition.getLabel(SINON);
-		String fsi = Condition.getLabel(FSI);
+		String sinon = Label.get(SINON);
+		String fsi = Label.get(FSI);
 	}
 	<SI>
 	expression() {
@@ -534,14 +559,10 @@ void conditionnel() : {} {
 
 // variable = fonction(variable, variable, ...)
 void retourne() : {} {
-
-	// Todo : faire l'affection de la valeur de retour (et vérifier son type) de la fonction
-	//(<ident> <EGAL>)?
-
-	// Todo : vérifier que la fonction appelé existe
-	// et que le bon nombre de paramètres (chacun avec le bon type) est passé
-	<RETOURNE> expression()
-
+	// Todo : vérifier que le type de ce qui est retourné concorde avec le type lors de la déclaration
+	<RETOURNE> expression() {
+		Yaka.Interpreter.ireturn(IdentArray.getGlobal(IdentArray.currentNameFunction).nbParams() + 4);
+	}
 }
 
 
@@ -616,26 +637,50 @@ void valeur() : {} {
 
 	| (<ident>  {
 		try {
-			Ident id = IdentArray.get(YakaTokenManager.identLu);
 
-			if(id == null){
+			// On récupère d'abord l'ident dans le bloc local
+			Ident id = IdentArray.getLocal(YakaTokenManager.identLu);
+
+			// Sinon on le récupère dans la fonction locale
+			if(id == null) {
+				id = IdentArray.getGlobal(IdentArray.currentNameFunction).getParam(YakaTokenManager.identLu);
+
+				// Sinon on le récupère dans le bloc global
+				if(id == null) {
+					id = IdentArray.getGlobal(YakaTokenManager.identLu);
+
+					// Si l'ident est trouvé dans le bloc global alors il devient la fonction locale courrante
+					if(id != null) {
+						IdentArray.currentNameFunction = YakaTokenManager.identLu;
+					}
+				}
+			}
+
+			// Si l'ident est toujours introuvable => Erreur
+			if(id == null) {
 				Expression.addType(ERROR);
 				throw new ParseException("Identifiant \""+YakaTokenManager.identLu+"\" non declare");
 			}
 
-			Expression.addType(IdentArray.get(YakaTokenManager.identLu).getType());
+			Expression.addType(id.getType());
 
 			if(id.isVar())
 				Yaka.Interpreter.iload(id.getValue());
 
 			else if(id.isConst())
 				Yaka.Interpreter.iconst(id.getValue());
+
+			else if(id.isFunction())
+				Yaka.Interpreter.reserveRetour();
+
 		}
 		catch(ParseException e) {
 			MyError.report("Erreur lexicale", e);
 		}
 	}
-	(argumentsFonction())?)
+	(argumentsFonction())?) {
+				Yaka.Interpreter.call(IdentArray.currentNameFunction);
+				}
 
 	| <VRAI> 	{
 		Expression.addType(BOOLEEN);
@@ -720,5 +765,3 @@ void opNeg() : {} {
 void argumentsFonction(): {} {
 	"(" (expression() (","expression())* )? ")"
 }
-
-

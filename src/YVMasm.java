@@ -20,7 +20,6 @@ public class YVMasm extends YVM {
 	}
 
 
-
 	// Fonction de sauvegarde du résulat dans le fichier de sortie
 	@Override
 	public void outputSave() {
@@ -158,17 +157,6 @@ public class YVMasm extends YVM {
 		code += "\tpop ax\n";
 		code += "\tor ax, bx\n";
 		code += "\tpush ax\n";
-		/*code += "\tpop ax\n";
-		code += "\tcmp ax, "+Integer.toString(TRUE)+"\n";
-		code += "\tjne $+6\n";
-		code += "\tpush "+Integer.toString(TRUE)+"\n";
-		code += "\tjmp $+14\n";
-		code += "\tpop ax\n";
-		code += "\tcmp ax, "+Integer.toString(TRUE)+"\n";
-		code += "\tjne $+6\n";
-		code += "\tpush "+Integer.toString(TRUE)+"\n";
-		code += "\tjmp $+4\n";
-		code += "\tpush "+Integer.toString(FALSE)+"\n";*/
 		code += "\n";
 
 	}
@@ -180,17 +168,6 @@ public class YVMasm extends YVM {
 		code += "\tpop ax\n";
 		code += "\tand ax, bx\n";
 		code += "\tpush ax\n";
-		/*code += "\tpop ax\n";
-		code += "\tcmp ax, "+Integer.toString(FALSE)+"\n";
-		code += "\tjne $+6\n";
-		code += "\tpush "+Integer.toString(FALSE)+"\n";
-		code += "\tjmp $+14\n";
-		code += "\tpop ax\n";
-		code += "\tcmp ax, "+Integer.toString(FALSE)+"\n";
-		code += "\tjne $+6\n";
-		code += "\tpush "+Integer.toString(FALSE)+"\n";
-		code += "\tjmp $+4\n";
-		code += "\tpush "+Integer.toString(TRUE)+"\n";*/
 		code += "\n";
 	}
 
@@ -341,8 +318,8 @@ public class YVMasm extends YVM {
 
 
 	// Insctructions d'écriture
+	@Override
 	public void ecrireChaine(String s) {
-		// Todo : faire un tableau des bibliothèques à charger (ne pas ajouter si déjà existant)
 
 		// Création du nom de variable messX
 		String msgName = "mess"+Integer.toString(data.size() + 1);
@@ -366,8 +343,9 @@ public class YVMasm extends YVM {
 		code += "\n";
 	}
 
+	@Override
 	public void ecrireEnt() {
-		// Peut prendre un Entier ou un Booléen
+		// Peut écrire un Entier ou un Booléen
 
 		String library = "ecrent";
 		if(!libraries.contains(library)) {
@@ -378,6 +356,7 @@ public class YVMasm extends YVM {
 		code += "\n";
 	}
 
+	@Override
 	public void aLaLigne() {
 
 		String library = "ligsuiv";
@@ -392,6 +371,7 @@ public class YVMasm extends YVM {
 
 
 	// Insctructions de lecture
+	@Override
 	public void lireEnt(Ident id) {
 
 		String library = "lirent";
@@ -400,40 +380,46 @@ public class YVMasm extends YVM {
 		}
 
 		code += "; "+"lireEnt "+id.getValue()+"\n";
-		code += "\tlea dx,[bp"+id.getValue()+"]\n";
+		code += "\tlea dx, [bp"+id.getValue()+"]\n";
 		code += "\tpush dx\n";
 		code += "\t"+"call "+library+"\n";
 		code += "\n";
 	}
 
+	@Override
 	public void label(String label) {
 		code += label + ":\n";
 	}
 
 
 	// Insctructions de fonctions
+	@Override
 	public void ouvreBloc (int slot){
 		code += "; ouvbloc " + slot + "\n";
-		code += "\tenter " + slot + ",0\n";
+		code += "\tenter " + slot + ", 0\n";
 	}
 
+	@Override
 	public void fermeBloc (int slot){
 		code += "; fermebloc " + slot + "\n";
-		code += "\tleave\n"
+		code += "\tleave\n";
 		code += "\tret " + slot + "\n";
 	}
 
+	@Override
 	public void ireturn (int offset){
 		code += "; ireturn " + offset + "\n";
 		code += "\tpop ax\n";
-		code += "\tmov [bp+" + slot + "],ax\n";
+		code += "\tmov [bp+" + offset + "], ax\n";
 	}
 
+	@Override
 	public void reserveRetour(){
 		code += "; reserveRetour\n";
-		code += "\tsub sp,2\n";
+		code += "\tsub sp, 2\n";
 	}
 
+	@Override
 	public void call (String name){
 		code += "; call " + name + "\n";
 		code += "\tcall " + name + "\n";

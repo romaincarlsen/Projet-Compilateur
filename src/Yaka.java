@@ -72,7 +72,7 @@
                                         //Writer.println(IdentArray.string());
 
                                         // On affiche le resultat du tableau d'expression
-                                        //Writer.println(Expression.string()) ;
+                                        //Writer.println(Expression.string());
 
                                         // On créer le script YVM
                                         Interpreter.outputSave();
@@ -106,7 +106,10 @@
       }
       declFonction();
     }
+    jj_consume_token(PRINCIPAL);
+                Yaka.Interpreter.label("main");
     bloc();
+    jj_consume_token(FPRINCIPAL);
     jj_consume_token(FPROGRAMME);
                 Yaka.Interpreter.queue();
   }
@@ -136,8 +139,11 @@
       }
       declVar();
     }
-                Yaka.Interpreter.ouvrePrinc(IdentArray.nbVar());
+                // Todo : On utilise plus jamais ouvrePrinc ?
+                //Yaka.Interpreter.ouvrePrinc(IdentArray.nbVar());
+                Yaka.Interpreter.ouvreBloc(IdentArray.nbVar());
     suiteInstr();
+
   }
 
   static final public void type() throws ParseException {
@@ -163,7 +169,7 @@
  * ====================================================
  */
 
-// CONST type constante, constante, ... ;
+// CONST type constante, constante, ...;
   static final public void declConst() throws ParseException {
     jj_consume_token(CONST);
     defConst();
@@ -188,7 +194,7 @@
                         IdentArray.lastIdent = YakaTokenManager.identLu;
     jj_consume_token(EGAL);
     valConst();
-                IdentArray.add(IdentArray.lastIdent, new IdConst(IdentArray.lastValue, IdentArray.lastType));
+                IdentArray.addLocal(IdentArray.lastIdent, new IdConst(IdentArray.lastValue, IdentArray.lastType));
   }
 
   static final public void valConst() throws ParseException {
@@ -201,7 +207,7 @@
     case ident:
       jj_consume_token(ident);
                 try {
-                        IdConst id = (IdConst) IdentArray.get(YakaTokenManager.identLu);
+                        IdConst id = (IdConst) IdentArray.getLocal(YakaTokenManager.identLu);
 
                         if(id == null)
                                 {if (true) throw new ParseException("Identifiant \u005c""+YakaTokenManager.identLu+"\u005c" non declare");}
@@ -230,15 +236,15 @@
     }
   }
 
-// VAR type variable, variable, ... ;
+// VAR type variable, variable, ...;
   static final public void declVar() throws ParseException {
     jj_consume_token(VAR);
     type();
     jj_consume_token(ident);
-                IdentArray.shiftOffset();
-                IdentArray.add(
+                IdentArray.shiftOffsetVar();
+                IdentArray.addLocal(
                         YakaTokenManager.identLu,
-                        new IdVar(IdentArray.currentOffset, IdentArray.lastType)
+                        new IdVar(IdentArray.offsetVar, IdentArray.lastType)
                 );
     label_5:
     while (true) {
@@ -252,26 +258,36 @@
       }
       jj_consume_token(51);
       jj_consume_token(ident);
-                        IdentArray.shiftOffset();
-                        IdentArray.add(
+                        IdentArray.shiftOffsetVar();
+                        IdentArray.addLocal(
                                 YakaTokenManager.identLu,
-                                new IdVar(IdentArray.currentOffset, IdentArray.lastType)
+                                new IdVar(IdentArray.offsetVar, IdentArray.lastType)
                         );
     }
     jj_consume_token(52);
   }
 
 // type FONCTION fonction(type variable, type variable, ...)
-//     instructions
+//     bloc
 //     RETOURNE (variable | expression)
 // FFONCTION
   static final public void declFonction() throws ParseException {
     type();
     jj_consume_token(FONCTION);
     jj_consume_token(ident);
+                IdentArray.currentNameFunction = YakaTokenManager.identLu;
+                IdentArray.addGlobal(
+                        IdentArray.currentNameFunction,
+                        new IdFunction(IdentArray.lastType)
+                );
+                Yaka.Interpreter.label(IdentArray.currentNameFunction);
     paramForms();
     bloc();
     jj_consume_token(FFONCTION);
+                IdentArray.sortParams(IdentArray.currentNameFunction);
+                IdentArray.initOffsetParam();
+                IdentArray.cleanLocaux();
+                IdentArray.initOffsetVar();
   }
 
   static final public void paramForms() throws ParseException {
@@ -304,6 +320,12 @@
   static final public void paramForm() throws ParseException {
     type();
     jj_consume_token(ident);
+                IdentArray.shiftOffsetParam();
+                IdentArray.addParam(
+                        IdentArray.currentNameFunction,
+                        YakaTokenManager.identLu,
+                        new IdVar(IdentArray.offsetParam, IdentArray.lastType)
+                );
   }
 
 /**
@@ -372,13 +394,13 @@
 // variable = (expression | variable | constante)
   static final public void affectation() throws ParseException {
     jj_consume_token(ident);
-                Ident affectId = IdentArray.get(YakaTokenManager.identLu);
+                Ident affectId = IdentArray.getLocal(YakaTokenManager.identLu);
                 try {
                         if(affectId.isConst())
                                 {if (true) throw new ParseException("Affectation impossible sur une constante");}
                 }
                 catch(ParseException e) {
-                        MyError.report("Erreur affectation", e);
+                        MyError.report("Erreur d'affectation", e);
                 }
     jj_consume_token(EGAL);
     expression();
@@ -392,7 +414,7 @@
     jj_consume_token(ident);
     jj_consume_token(54);
                 try {
-                        Ident id = IdentArray.get(YakaTokenManager.identLu);
+                        Ident id = IdentArray.getLocal(YakaTokenManager.identLu);
                         if(id.isVar()) {
                                 Yaka.Interpreter.lireEnt(id);
                         }
@@ -449,8 +471,8 @@
 // FAIT
   static final public void boucle() throws ParseException {
                 // Génération des étiquettes de saut avec incrémentation du numéro
-                String faire = Condition.getLabel(FAIRE);
-                String fait = Condition.getLabel(FAIT);
+                String faire = Label.get(FAIRE);
+                String fait = Label.get(FAIT);
     jj_consume_token(TANTQUE);
                 // Ajout de l'étiquette de début de boucle
                 Yaka.Interpreter.label(faire);
@@ -484,8 +506,8 @@
 // FSI
   static final public void conditionnel() throws ParseException {
                 // Génération des étiquettes de saut avec incrémentation du numéro
-                String sinon = Condition.getLabel(SINON);
-                String fsi = Condition.getLabel(FSI);
+                String sinon = Label.get(SINON);
+                String fsi = Label.get(FSI);
     jj_consume_token(SI);
     expression();
                 try {
@@ -526,6 +548,7 @@
   static final public void retourne() throws ParseException {
     jj_consume_token(RETOURNE);
     expression();
+                Yaka.Interpreter.ireturn(IdentArray.getGlobal(IdentArray.currentNameFunction).nbParams() + 4);
   }
 
 /**
@@ -644,20 +667,42 @@
     case ident:
       jj_consume_token(ident);
                 try {
-                        Ident id = IdentArray.get(YakaTokenManager.identLu);
 
-                        if(id == null){
+                        // On récupère d'abord l'ident dans le bloc local
+                        Ident id = IdentArray.getLocal(YakaTokenManager.identLu);
+
+                        // Sinon on le récupère dans la fonction locale
+                        if(id == null) {
+                                id = IdentArray.getGlobal(IdentArray.currentNameFunction).getParam(YakaTokenManager.identLu);
+
+                                // Sinon on le récupère dans le bloc global
+                                if(id == null) {
+                                        id = IdentArray.getGlobal(YakaTokenManager.identLu);
+
+                                        // Si l'ident est trouvé dans le bloc global alors il devient la fonction locale courrante
+                                        if(id != null) {
+                                                IdentArray.currentNameFunction = YakaTokenManager.identLu;
+                                        }
+                                }
+                        }
+
+                        // Si l'ident est toujours introuvable => Erreur
+                        if(id == null) {
                                 Expression.addType(ERROR);
                                 {if (true) throw new ParseException("Identifiant \u005c""+YakaTokenManager.identLu+"\u005c" non declare");}
                         }
 
-                        Expression.addType(IdentArray.get(YakaTokenManager.identLu).getType());
+                        Expression.addType(id.getType());
 
                         if(id.isVar())
                                 Yaka.Interpreter.iload(id.getValue());
 
                         else if(id.isConst())
                                 Yaka.Interpreter.iconst(id.getValue());
+
+                        else if(id.isFunction())
+                                Yaka.Interpreter.reserveRetour();
+
                 }
                 catch(ParseException e) {
                         MyError.report("Erreur lexicale", e);
@@ -670,6 +715,7 @@
         jj_la1[20] = jj_gen;
         ;
       }
+                                Yaka.Interpreter.call(IdentArray.currentNameFunction);
       break;
     case VRAI:
       jj_consume_token(VRAI);
