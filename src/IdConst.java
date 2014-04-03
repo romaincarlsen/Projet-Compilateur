@@ -8,7 +8,7 @@ public class IdConst extends Ident {
 		/**
 		 *  Constructeur
 		 */
-		public IdConst(Integer value, String type) {
+		public IdConst(Integer value, Integer type) {
 			this.value = value;
 			this.type = type;
 		}

@@ -4,14 +4,11 @@
                 // Choix de l'interpreteur a utiliser
                 public static String interpreterType = "YVMasm"; // YVM ou YVMasm
 
-                // Nom du fichier a creer par l'interpreteur
-                public static String scriptOutputName = "../outputs/{{FILENAME}}.asm";
-
                 // Interpreteur
                 public static YVM Interpreter;
 
                 // Pour se souvenir s'il y a déjà eu une erreur
-                public static boolean err = false;
+                public static boolean error = false;
 
 
                 // Main : point d'entree pour le compilateur
@@ -19,23 +16,23 @@
 
                         Yaka analyzer;
                         java.io.InputStream input;
+                        String inputFilename = "";
 
                         Writer.print("\u005cn"); // Juste pour un affichage plus claire
 
                         // Recuperation du texte/script a traiter
-                        if(args.length==1) {
+                        if(args.length == 1) {
                                 try {
-                                        String pathToFile = args[args.length-1];
+                                        String pathToFile = args[0];
                                         String[] explodePath = pathToFile.split("/");
 
-                                        // Le nom du fichier de sortie est le même avec l'extension ".asm" dans le dossier "outputs"
-                                        scriptOutputName = scriptOutputName.replace("{{FILENAME}}", explodePath[explodePath.length - 1]);
+                                        inputFilename = explodePath[explodePath.length - 1];
 
                                         // On récupère le contenu du fichier
                                         input = new java.io.FileInputStream(pathToFile+".yaka");
                                 }
                                 catch (java.io.FileNotFoundException e) {
-                                        err = true;
+                                        error = true;
                                         Writer.errorln("Fichier introuvable !\u005cn");
                                         return;
                                 }
@@ -43,8 +40,7 @@
                         else if (args.length == 0) {
                                 Writer.println("Lecture sur l'entree standard...\u005cn");
 
-                                // Le nom du fichier de sortie est "test.asm" dans le dossier "outputs"
-                                scriptOutputName = scriptOutputName.replace("{{FILENAME}}", "out");
+                                inputFilename = "out";
 
                                 // On récupère le contenu de la console
                                 input = System.in;
@@ -56,10 +52,10 @@
 
                         // Declaration de l'interpreteur
                         if(interpreterType.equals("YVM")) {
-                                Interpreter = new YVM(scriptOutputName);
+                                Interpreter = new YVM(inputFilename);
                         }
                         else if(interpreterType.equals("YVMasm")) {
-                                Interpreter = new YVMasm(scriptOutputName);
+                                Interpreter = new YVMasm(inputFilename);
                         }
 
                         // Analyse
@@ -68,7 +64,7 @@
                                 analyzer = new Yaka(input);
                                 analyzer.analyse();
 
-                                if(!err) {
+                                if(!error) {
 
                                         Writer.println("Analyse Syntaxique terminee !\u005cn");
 
@@ -80,18 +76,11 @@
 
                                         // On créer le script YVM
                                         Interpreter.outputSave();
-
-                                        Writer.println("Programme de sortie : "+scriptOutputName+"\u005cn");
                                 }
 
                         }
                         catch(ParseException e) {
-                                err = true;
-                                TokenMgrError error = new TokenMgrError(
-                                        "\u005cn"+e.getMessage()+"\u005cn",
-                                        TokenMgrError.LEXICAL_ERROR
-                                );
-                                Writer.errorln(error.getMessage());
+                                MyError.report("Erreur inconnue", e);
                         }
                 }
 
@@ -117,9 +106,7 @@
       }
       declFonction();
     }
-    jj_consume_token(PRINCIPAL);
     bloc();
-    jj_consume_token(FPRINCIPAL);
     jj_consume_token(FPROGRAMME);
                 Yaka.Interpreter.queue();
   }
@@ -149,7 +136,6 @@
       }
       declVar();
     }
-                // Todo voir s'il ne serait pas mieux d'y mettre ailleur
                 Yaka.Interpreter.ouvrePrinc(IdentArray.nbVar());
     suiteInstr();
   }
@@ -158,11 +144,11 @@
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case ENTIER:
       jj_consume_token(ENTIER);
-                IdentArray.lastType = tokenImage[ENTIER];
+                IdentArray.lastType = ENTIER;
       break;
     case BOOLEEN:
       jj_consume_token(BOOLEEN);
-                IdentArray.lastType = tokenImage[BOOLEEN];
+                IdentArray.lastType = BOOLEEN;
       break;
     default:
       jj_la1[3] = jj_gen;
@@ -210,7 +196,7 @@
     case entier:
       jj_consume_token(entier);
                 IdentArray.lastValue = YakaTokenManager.entierLu;
-                IdentArray.lastType = tokenImage[ENTIER];
+                IdentArray.lastType = ENTIER;
       break;
     case ident:
       jj_consume_token(ident);
@@ -224,23 +210,18 @@
                         IdentArray.lastType = id.type;
                 }
                 catch(ParseException e) {
-                        err = true;
-                        TokenMgrError error = new TokenMgrError(
-                                "Erreur lexicale, ligne "+YakaTokenManager.currentLine+" :\u005cn"+e.getMessage()+"\u005cn",
-                                TokenMgrError.LEXICAL_ERROR
-                        );
-                        Writer.errorln(error.getMessage());
+                        MyError.report("Erreur lexicale", e);
                 }
       break;
     case VRAI:
       jj_consume_token(VRAI);
                 IdentArray.lastValue = Yaka.Interpreter.TRUE;
-                IdentArray.lastType = tokenImage[BOOLEEN];
+                IdentArray.lastType = BOOLEEN;
       break;
     case FAUX:
       jj_consume_token(FAUX);
                 IdentArray.lastValue = Yaka.Interpreter.FALSE;
-                IdentArray.lastType = tokenImage[BOOLEEN];
+                IdentArray.lastType = BOOLEEN;
       break;
     default:
       jj_la1[5] = jj_gen;
@@ -397,12 +378,7 @@
                                 {if (true) throw new ParseException("Affectation impossible sur une constante");}
                 }
                 catch(ParseException e) {
-                        err = true;
-                        TokenMgrError error = new TokenMgrError(
-                                "Erreur d'affectation, ligne "+YakaTokenManager.currentLine+" :\u005cn"+e.getMessage()+"\u005cn",
-                                TokenMgrError.LEXICAL_ERROR
-                        );
-                        Writer.errorln(error.getMessage());
+                        MyError.report("Erreur affectation", e);
                 }
     jj_consume_token(EGAL);
     expression();
@@ -415,7 +391,18 @@
     jj_consume_token(53);
     jj_consume_token(ident);
     jj_consume_token(54);
-                Yaka.Interpreter.lireEnt(IdentArray.get(YakaTokenManager.identLu));
+                try {
+                        Ident id = IdentArray.get(YakaTokenManager.identLu);
+                        if(id.isVar()) {
+                                Yaka.Interpreter.lireEnt(id);
+                        }
+                        else {
+                                {if (true) throw new ParseException("Affectation impossible sur une constante");}
+                        }
+                }
+                catch(ParseException e) {
+                        MyError.report("Erreur de lecture", e);
+                }
   }
 
 // ECRIRE(chaine)
@@ -462,29 +449,24 @@
 // FAIT
   static final public void boucle() throws ParseException {
                 // Génération des étiquettes de saut avec incrémentation du numéro
-                String faire = Condition.getLabel(tokenImage[FAIRE]);
-                String fait = Condition.getLabel(tokenImage[FAIT]);
+                String faire = Condition.getLabel(FAIRE);
+                String fait = Condition.getLabel(FAIT);
     jj_consume_token(TANTQUE);
                 // Ajout de l'étiquette de début de boucle
                 Yaka.Interpreter.label(faire);
     expression();
                 try {
-                        String type = Expression.popType();
+                        int type = Expression.popType();
 
                         // Vérification du type (booléen) de l'expression
-                        if(type != tokenImage[BOOLEEN])
+                        if(type != BOOLEEN)
                                 {if (true) throw new ParseException("Expression non bool\u00e9enne ("+type+" trouv\u00e9)");}
 
                         // Si expression fausse, on sort de la boucle
                         Yaka.Interpreter.iffaux(fait);
                 }
                 catch(ParseException e) {
-                        err = true;
-                        TokenMgrError error = new TokenMgrError(
-                                "Erreur d'iteration, ligne "+YakaTokenManager.currentLine+" :\u005cn"+e.getMessage()+"\u005cn",
-                                TokenMgrError.LEXICAL_ERROR
-                        );
-                        Writer.errorln(error.getMessage());
+                        MyError.report("Erreur d'iteration", e);
                 }
     jj_consume_token(FAIRE);
     suiteInstr();
@@ -502,27 +484,22 @@
 // FSI
   static final public void conditionnel() throws ParseException {
                 // Génération des étiquettes de saut avec incrémentation du numéro
-                String sinon = Condition.getLabel(tokenImage[SINON]);
-                String fsi = Condition.getLabel(tokenImage[FSI]);
+                String sinon = Condition.getLabel(SINON);
+                String fsi = Condition.getLabel(FSI);
     jj_consume_token(SI);
     expression();
                 try {
-                        String type = Expression.popType();
+                        int type = Expression.popType();
 
                         // Vérification du type (booléen) de l'expression
-                        if(type != tokenImage[BOOLEEN])
+                        if(type != BOOLEEN)
                                 {if (true) throw new ParseException("Expression non bool\u00e9enne ("+type+" trouv\u00e9)");}
 
                         // Si expression fausse, on passe au bloc "sinon" de la conditionnel
                         Yaka.Interpreter.iffaux(sinon);
                 }
                 catch(ParseException e) {
-                        err = true;
-                        TokenMgrError error = new TokenMgrError(
-                                "Erreur de condition, ligne "+YakaTokenManager.currentLine+" :\u005cn"+e.getMessage()+"\u005cn",
-                                TokenMgrError.LEXICAL_ERROR
-                        );
-                        Writer.errorln(error.getMessage());
+                        MyError.report("Erreur de condition", e);
                 }
     jj_consume_token(ALORS);
     suiteInstr();
@@ -567,50 +544,7 @@
     case DIFF:
       opRel();
       simpleExpr();
-                        String type1 = Expression.popType();
-                        String operator = Expression.popOperator();
-                        String type2 = Expression.popType();
-
-                        try {
-
-                                String newType = Expression.dualOperandType(type1, operator, type2);
-
-                                if(newType == tokenImage[ERROR] && type1 != tokenImage[ERROR] && type2 != tokenImage[ERROR])
-                                        {if (true) throw new ParseException("Operation de type "+type1+" "+operator+" "+type2+" interdite");}
-
-                                else {
-                                        Expression.addType(newType);
-
-                                        if (operator == tokenImage[INF])
-                                                Yaka.Interpreter.iinf();
-
-                                        else if (operator == tokenImage[INFEGAL])
-                                                Yaka.Interpreter.iinfegal();
-
-                                        else if (operator == tokenImage[SUP])
-                                                Yaka.Interpreter.isup();
-
-                                        else if (operator == tokenImage[SUPEGAL])
-                                                Yaka.Interpreter.isupegal();
-
-                                        else if (operator == tokenImage[EGAL])
-                                                Yaka.Interpreter.iegal();
-
-                                        else if (operator == tokenImage[DIFF])
-                                                Yaka.Interpreter.idiff();
-
-                                        else
-                                                {if (true) throw new ParseException("Operateur "+operator+" inattendu");}
-                                }
-                        }
-                        catch(ParseException e) {
-                                err = true;
-                                TokenMgrError error = new TokenMgrError(
-                                        "Erreur d'expression, ligne "+YakaTokenManager.currentLine+" :\u005cn"+e.getMessage()+"\u005cn",
-                                        TokenMgrError.LEXICAL_ERROR
-                                );
-                                Writer.errorln(error.getMessage());
-                        }
+                        Expression.dualUnstack();
       break;
     default:
       jj_la1[15] = jj_gen;
@@ -634,41 +568,7 @@
       }
       opAdd();
       terme();
-                        String type1 = Expression.popType();
-                        String operator = Expression.popOperator();
-                        String type2 = Expression.popType();
-
-                        try {
-
-                                String newType = Expression.dualOperandType(type1, operator, type2);
-
-                                if(newType == tokenImage[ERROR] && type1 != tokenImage[ERROR] && type2 != tokenImage[ERROR])
-                                        {if (true) throw new ParseException("Operation de type "+type1+" "+operator+" "+type2+" interdite");}
-
-                                else {
-                                        Expression.addType(newType);
-
-                                        if(operator == tokenImage[PLUS])
-                                                Yaka.Interpreter.iadd();
-
-                                        else if (operator == tokenImage[MOINS])
-                                                Yaka.Interpreter.isub();
-
-                                        else if (operator == tokenImage[OU])
-                                                Yaka.Interpreter.ior();
-
-                                        else
-                                                {if (true) throw new ParseException("Operateur "+operator+" innatendu");}
-                                }
-                        }
-                        catch(ParseException e) {
-                                err = true;
-                                TokenMgrError error = new TokenMgrError(
-                                        "Erreur d'expression, ligne "+YakaTokenManager.currentLine+" :\u005cn"+e.getMessage()+"\u005cn",
-                                        TokenMgrError.LEXICAL_ERROR
-                                );
-                                Writer.errorln(error.getMessage());
-                        }
+                        Expression.dualUnstack();
     }
   }
 
@@ -688,41 +588,7 @@
       }
       opMul();
       facteur();
-                        String type1 = Expression.popType();
-                        String operator = Expression.popOperator();
-                        String type2 = Expression.popType();
-
-                        try {
-
-                                String newType = Expression.dualOperandType(type1, operator, type2);
-
-                                if(newType == tokenImage[ERROR] && type1 != tokenImage[ERROR] && type2 != tokenImage[ERROR])
-                                        {if (true) throw new ParseException("Operation de type "+type1+" "+operator+" "+type2+" interdite");}
-
-                                else {
-                                        Expression.addType(newType);
-
-                                        if (operator == tokenImage[MUL])
-                                                Yaka.Interpreter.imul();
-
-                                        else if (operator == tokenImage[DIV])
-                                                Yaka.Interpreter.idiv();
-
-                                        else if(operator == tokenImage[ET])
-                                                Yaka.Interpreter.iand();
-
-                                        else
-                                                {if (true) throw new ParseException("Operateur "+operator+" innatendu");}
-                                }
-                        }
-                        catch(ParseException e) {
-                                err = true;
-                                TokenMgrError error = new TokenMgrError(
-                                        "Erreur d'expression, ligne "+YakaTokenManager.currentLine+" :\u005cn"+e.getMessage()+"\u005cn",
-                                        TokenMgrError.LEXICAL_ERROR
-                                );
-                                Writer.errorln(error.getMessage());
-                        }
+                        Expression.dualUnstack();
     }
   }
 
@@ -739,37 +605,7 @@
     case NON:
       opNeg();
       primaire();
-                String type = Expression.popType();
-                String operator = Expression.popOperator();
-
-                try {
-
-                        String newType = Expression.singleOperandType(operator, type);
-
-                        if(newType == tokenImage[ERROR] && type != tokenImage[ERROR])
-                                        {if (true) throw new ParseException("Operation de type "+operator+" "+type+" interdite");}
-
-                        else {
-                                Expression.addType(newType);
-
-                                if(operator == tokenImage[MOINS])
-                                        Yaka.Interpreter.ineg();
-
-                                else if(operator == tokenImage[NON])
-                                        Yaka.Interpreter.inot();
-
-                                else
-                                        {if (true) throw new ParseException("Operateur "+operator+" innatendu");}
-                        }
-                }
-                catch(ParseException e) {
-                        err = true;
-                        TokenMgrError error = new TokenMgrError(
-                                "Erreur d'expression, ligne "+YakaTokenManager.currentLine+" :\u005cn"+e.getMessage()+"\u005cn",
-                                TokenMgrError.LEXICAL_ERROR
-                        );
-                        Writer.errorln(error.getMessage());
-                }
+                        Expression.singleUnstack();
       break;
     default:
       jj_la1[18] = jj_gen;
@@ -802,7 +638,7 @@
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case entier:
       jj_consume_token(entier);
-                Expression.addType(tokenImage[ENTIER]);
+                Expression.addType(ENTIER);
                 Yaka.Interpreter.iconst(YakaTokenManager.entierLu);
       break;
     case ident:
@@ -811,11 +647,11 @@
                         Ident id = IdentArray.get(YakaTokenManager.identLu);
 
                         if(id == null){
-                                Expression.addType(YakaConstants.tokenImage[YakaConstants.ERROR]);
+                                Expression.addType(ERROR);
                                 {if (true) throw new ParseException("Identifiant \u005c""+YakaTokenManager.identLu+"\u005c" non declare");}
                         }
 
-                        Expression.addType(IdentArray.get(YakaTokenManager.identLu).type);
+                        Expression.addType(IdentArray.get(YakaTokenManager.identLu).getType());
 
                         if(id.isVar())
                                 Yaka.Interpreter.iload(id.getValue());
@@ -824,12 +660,7 @@
                                 Yaka.Interpreter.iconst(id.getValue());
                 }
                 catch(ParseException e) {
-                        err = true;
-                        TokenMgrError error = new TokenMgrError(
-                                "Erreur lexicale, ligne "+YakaTokenManager.currentLine+" :\u005cn"+e.getMessage()+"\u005cn",
-                                TokenMgrError.LEXICAL_ERROR
-                        );
-                        Writer.errorln(error.getMessage());
+                        MyError.report("Erreur lexicale", e);
                 }
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
       case 53:
@@ -842,12 +673,12 @@
       break;
     case VRAI:
       jj_consume_token(VRAI);
-                Expression.addType(tokenImage[BOOLEEN]);
+                Expression.addType(BOOLEEN);
                 Yaka.Interpreter.iconst(Yaka.Interpreter.TRUE);
       break;
     case FAUX:
       jj_consume_token(FAUX);
-                Expression.addType(tokenImage[BOOLEEN]);
+                Expression.addType(BOOLEEN);
                 Yaka.Interpreter.iconst(Yaka.Interpreter.FALSE);
       break;
     default:
@@ -861,27 +692,27 @@
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case EGAL:
       jj_consume_token(EGAL);
-                Expression.addOperator(tokenImage[EGAL]);
+                Expression.addOperator(EGAL);
       break;
     case DIFF:
       jj_consume_token(DIFF);
-                Expression.addOperator(tokenImage[DIFF]);
+                Expression.addOperator(DIFF);
       break;
     case INF:
       jj_consume_token(INF);
-                Expression.addOperator(tokenImage[INF]);
+                Expression.addOperator(INF);
       break;
     case INFEGAL:
       jj_consume_token(INFEGAL);
-                Expression.addOperator(tokenImage[INFEGAL]);
+                Expression.addOperator(INFEGAL);
       break;
     case SUP:
       jj_consume_token(SUP);
-                Expression.addOperator(tokenImage[SUP]);
+                Expression.addOperator(SUP);
       break;
     case SUPEGAL:
       jj_consume_token(SUPEGAL);
-                Expression.addOperator(tokenImage[SUPEGAL]);
+                Expression.addOperator(SUPEGAL);
       break;
     default:
       jj_la1[22] = jj_gen;
@@ -894,15 +725,15 @@
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case PLUS:
       jj_consume_token(PLUS);
-                Expression.addOperator(tokenImage[PLUS]);
+                Expression.addOperator(PLUS);
       break;
     case MOINS:
       jj_consume_token(MOINS);
-                Expression.addOperator(tokenImage[MOINS]);
+                Expression.addOperator(MOINS);
       break;
     case OU:
       jj_consume_token(OU);
-                Expression.addOperator(tokenImage[OU]);
+                Expression.addOperator(OU);
       break;
     default:
       jj_la1[23] = jj_gen;
@@ -915,15 +746,15 @@
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case MUL:
       jj_consume_token(MUL);
-                Expression.addOperator(tokenImage[MUL]);
+                Expression.addOperator(MUL);
       break;
     case DIV:
       jj_consume_token(DIV);
-                Expression.addOperator(tokenImage[DIV]);
+                Expression.addOperator(DIV);
       break;
     case ET:
       jj_consume_token(ET);
-                Expression.addOperator(tokenImage[ET]);
+                Expression.addOperator(ET);
       break;
     default:
       jj_la1[24] = jj_gen;
@@ -936,11 +767,11 @@
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case MOINS:
       jj_consume_token(MOINS);
-                Expression.addOperator(tokenImage[MOINS]);
+                Expression.addOperator(MOINS);
       break;
     case NON:
       jj_consume_token(NON);
-                Expression.addOperator(tokenImage[NON]);
+                Expression.addOperator(NON);
       break;
     default:
       jj_la1[25] = jj_gen;

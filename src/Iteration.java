@@ -6,16 +6,16 @@ public class Iteration {
 	/**
 	 * Pour garder le compte de chaque label
 	 */
-	public static HashMap<String, Integer> labels = new HashMap<String, Integer>();
+	public static HashMap<Integer, Integer> labels = new HashMap<Integer, Integer>();
 
 	/**
 	 * Permet de générer un nouveau label au format :
 	 * FAIRE1, FAIRE2, FAIRE3...
 	 * FAIT1, FAIT2, FAIT3...
 	 */
-	public static String getLabel(String label) {
-		// On suppime les " autour du label donné par YakaTokenManager
-		label = label.replaceAll("\"$|^\"", "");
+	public static String getLabel(Integer label) {
+		// On suppime les " autour du label donné par YakaConstants
+		String strLabel = YakaConstants.tokenImage[label].replaceAll("\"$|^\"", "");
 
 		// On récupère le comptes des labels déjà présents
 		Integer labelCount = (Integer) labels.get(label);
@@ -31,8 +31,8 @@ public class Iteration {
 			labels.put(label, labelCount);
 		}
 
-		// On retourne l'étiquette générée
-		return label+labelCount;
+		// On retourne l'étiquette générée avec le compteut incrémenté
+		return strLabel+labelCount;
 	}
 
 }

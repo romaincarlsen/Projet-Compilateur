@@ -10,7 +10,7 @@ public class IdentArray {
 
 		// Variables pour l'ajout d'un ident
 		public static String lastIdent;
-		public static String lastType;
+		public static Integer lastType;
 		public static Integer lastValue;
 		public static int currentOffset = 0;
 

@@ -8,7 +8,7 @@ public class IdVar extends Ident {
 		/**
 		 *  Constructeur
 		 */
-		public IdVar(Integer offset, String type) {
+		public IdVar(Integer offset, Integer type) {
 			this.offset = offset;
 			this.type = type;
 		}

@@ -18,14 +18,11 @@ PARSER_BEGIN(Yaka)
 		// Choix de l'interpreteur a utiliser
 		public static String interpreterType = "YVMasm"; // YVM ou YVMasm
 
-		// Nom du fichier a creer par l'interpreteur
-		public static String scriptOutputName = "../outputs/{{FILENAME}}.asm";
-
 		// Interpreteur
 		public static YVM Interpreter;
 
 		// Pour se souvenir s'il y a déjà eu une erreur
-		public static boolean err = false;
+		public static boolean error = false;
 
 
 		// Main : point d'entree pour le compilateur
@@ -33,23 +30,23 @@ PARSER_BEGIN(Yaka)
 
 			Yaka analyzer;
 			java.io.InputStream input;
+			String inputFilename = "";
 
 			Writer.print("\n"); // Juste pour un affichage plus claire
 
 			// Recuperation du texte/script a traiter
-			if(args.length==1) {
+			if(args.length == 1) {
 				try {
-					String pathToFile = args[args.length-1];
+					String pathToFile = args[0];
 					String[] explodePath = pathToFile.split("/");
 
-					// Le nom du fichier de sortie est le même avec l'extension ".asm" dans le dossier "outputs"
-					scriptOutputName = scriptOutputName.replace("{{FILENAME}}", explodePath[explodePath.length - 1]);
+					inputFilename = explodePath[explodePath.length - 1];
 
 					// On récupère le contenu du fichier
 					input = new java.io.FileInputStream(pathToFile+".yaka");
 				}
 				catch (java.io.FileNotFoundException e) {
-					err = true;
+					error = true;
 					Writer.errorln("Fichier introuvable !\n");
 					return;
 				}
@@ -57,8 +54,7 @@ PARSER_BEGIN(Yaka)
 			else if (args.length == 0) {
 				Writer.println("Lecture sur l'entree standard...\n");
 
-				// Le nom du fichier de sortie est "test.asm" dans le dossier "outputs"
-				scriptOutputName = scriptOutputName.replace("{{FILENAME}}", "out");
+				inputFilename = "out";
 
 				// On récupère le contenu de la console
 				input = System.in;
@@ -70,10 +66,10 @@ PARSER_BEGIN(Yaka)
 
 			// Declaration de l'interpreteur
 			if(interpreterType.equals("YVM")) {
-				Interpreter = new YVM(scriptOutputName);
+				Interpreter = new YVM(inputFilename);
 			}
 			else if(interpreterType.equals("YVMasm")) {
-				Interpreter = new YVMasm(scriptOutputName);
+				Interpreter = new YVMasm(inputFilename);
 			}
 
 			// Analyse
@@ -82,7 +78,7 @@ PARSER_BEGIN(Yaka)
 				analyzer = new Yaka(input);
 				analyzer.analyse();
 
-				if(!err) {
+				if(!error) {
 
 					Writer.println("Analyse Syntaxique terminee !\n");
 
@@ -94,18 +90,11 @@ PARSER_BEGIN(Yaka)
 
 					// On créer le script YVM
 					Interpreter.outputSave();
-
-					Writer.println("Programme de sortie : "+scriptOutputName+"\n");
 				}
 
 			}
 			catch(ParseException e) {
-				err = true;
-				TokenMgrError error = new TokenMgrError(
-					"\n"+e.getMessage()+"\n",
-					TokenMgrError.LEXICAL_ERROR
-				);
-				Writer.errorln(error.getMessage());
+				MyError.report("Erreur inconnue", e);
 			}
 		}
 
@@ -224,9 +213,9 @@ void analyse() : {} {
 	}
 	<ident>
 	(declFonction())*
-	<PRINCIPAL>
+	//<PRINCIPAL>
 	bloc()
-	<FPRINCIPAL>
+	//<FPRINCIPAL>
 	<FPROGRAMME> {
 		Yaka.Interpreter.queue();
 	}
@@ -236,7 +225,6 @@ void analyse() : {} {
 void bloc() : {} {
 	(declConst())*
 	(declVar())* {
-		// Todo voir s'il ne serait pas mieux d'y mettre ailleur
 		Yaka.Interpreter.ouvrePrinc(IdentArray.nbVar());
 	}
 	suiteInstr()
@@ -245,11 +233,11 @@ void bloc() : {} {
 
 void type() : {} {
 	(<ENTIER>) {
-	  	IdentArray.lastType = tokenImage[ENTIER];
+	  	IdentArray.lastType = ENTIER;
 	}
 
 	| (<BOOLEEN>) {
-		IdentArray.lastType = tokenImage[BOOLEEN];
+		IdentArray.lastType = BOOLEEN;
 	}
 }
 
@@ -289,7 +277,7 @@ void defConst() : {} {
 void valConst() : {} {
 	(<entier>) {
 		IdentArray.lastValue = YakaTokenManager.entierLu;
-		IdentArray.lastType = tokenImage[ENTIER];
+		IdentArray.lastType = ENTIER;
 	}
 
 	| (<ident>) {
@@ -303,24 +291,19 @@ void valConst() : {} {
 			IdentArray.lastType = id.type;
 		}
 		catch(ParseException e) {
-			err = true;
-			TokenMgrError error = new TokenMgrError(
-				"Erreur lexicale, ligne "+YakaTokenManager.currentLine+" :\n"+e.getMessage()+"\n",
-				TokenMgrError.LEXICAL_ERROR
-			);
-			Writer.errorln(error.getMessage());
+			MyError.report("Erreur lexicale", e);
 		}
 
  	}
 
 	| (<VRAI>) {
 		IdentArray.lastValue = Yaka.Interpreter.TRUE;
-		IdentArray.lastType = tokenImage[BOOLEEN];
+		IdentArray.lastType = BOOLEEN;
 	}
 
 	| (<FAUX>) {
 		IdentArray.lastValue = Yaka.Interpreter.FALSE;
-		IdentArray.lastType = tokenImage[BOOLEEN];
+		IdentArray.lastType = BOOLEEN;
 	}
 
 }
@@ -413,12 +396,7 @@ void affectation() : {} {
 				throw new ParseException("Affectation impossible sur une constante");
 		}
 		catch(ParseException e) {
-			err = true;
-			TokenMgrError error = new TokenMgrError(
-				"Erreur d'affectation, ligne "+YakaTokenManager.currentLine+" :\n"+e.getMessage()+"\n",
-				TokenMgrError.LEXICAL_ERROR
-			);
-			Writer.errorln(error.getMessage());
+			MyError.report("Erreur affectation", e);
 		}
 
 	}
@@ -431,9 +409,19 @@ void affectation() : {} {
 
 // LIRE(variable)
 void lecture() : {} {
-	// Todo : véririfier que la lecture ce fait sur une variable
 	(<LIRE>"("<ident>")") {
-		Yaka.Interpreter.lireEnt(IdentArray.get(YakaTokenManager.identLu));
+		try {
+			Ident id = IdentArray.get(YakaTokenManager.identLu);
+			if(id.isVar()) {
+				Yaka.Interpreter.lireEnt(id);
+			}
+			else {
+				throw new ParseException("Affectation impossible sur une constante");
+			}
+		}
+		catch(ParseException e) {
+			MyError.report("Erreur de lecture", e);
+		}
 	}
 }
 
@@ -464,8 +452,8 @@ void ecriture() : {} {
 void boucle() : {} {
 	{
 		// Génération des étiquettes de saut avec incrémentation du numéro
-		String faire = Condition.getLabel(tokenImage[FAIRE]);
-		String fait = Condition.getLabel(tokenImage[FAIT]);
+		String faire = Condition.getLabel(FAIRE);
+		String fait = Condition.getLabel(FAIT);
 	}
 	<TANTQUE> {
 		// Ajout de l'étiquette de début de boucle
@@ -473,22 +461,17 @@ void boucle() : {} {
 	}
 	expression() {
 		try {
-			String type = Expression.popType();
+			int type = Expression.popType();
 
 			// Vérification du type (booléen) de l'expression
-			if(type != tokenImage[BOOLEEN])
+			if(type != BOOLEEN)
 				throw new ParseException("Expression non booléenne ("+type+" trouvé)");
 
 			// Si expression fausse, on sort de la boucle
 			Yaka.Interpreter.iffaux(fait);
 		}
 		catch(ParseException e) {
-			err = true;
-			TokenMgrError error = new TokenMgrError(
-				"Erreur d'iteration, ligne "+YakaTokenManager.currentLine+" :\n"+e.getMessage()+"\n",
-				TokenMgrError.LEXICAL_ERROR
-			);
-			Writer.errorln(error.getMessage());
+			MyError.report("Erreur d'iteration", e);
 		}
 	}
 	<FAIRE>
@@ -511,28 +494,23 @@ void boucle() : {} {
 void conditionnel() : {} {
 	{
 		// Génération des étiquettes de saut avec incrémentation du numéro
-		String sinon = Condition.getLabel(tokenImage[SINON]);
-		String fsi = Condition.getLabel(tokenImage[FSI]);
+		String sinon = Condition.getLabel(SINON);
+		String fsi = Condition.getLabel(FSI);
 	}
 	<SI>
 	expression() {
 		try {
-			String type = Expression.popType();
+			int type = Expression.popType();
 
 			// Vérification du type (booléen) de l'expression
-			if(type != tokenImage[BOOLEEN])
+			if(type != BOOLEEN)
 				throw new ParseException("Expression non booléenne ("+type+" trouvé)");
 
 			// Si expression fausse, on passe au bloc "sinon" de la conditionnel
 			Yaka.Interpreter.iffaux(sinon);
 		}
 		catch(ParseException e) {
-			err = true;
-			TokenMgrError error = new TokenMgrError(
-				"Erreur de condition, ligne "+YakaTokenManager.currentLine+" :\n"+e.getMessage()+"\n",
-				TokenMgrError.LEXICAL_ERROR
-			);
-			Writer.errorln(error.getMessage());
+			MyError.report("Erreur de condition", e);
 		}
 	}
 	<ALORS>
@@ -563,7 +541,7 @@ void retourne() : {} {
 	// Todo : vérifier que la fonction appelé existe
 	// et que le bon nombre de paramètres (chacun avec le bon type) est passé
 	<RETOURNE> expression()
-	
+
 }
 
 
@@ -583,51 +561,7 @@ void expression() : {} {
 	(
 		opRel()
 		simpleExpr() {
-
-			String type1 = Expression.popType();
-			String operator = Expression.popOperator();
-			String type2 = Expression.popType();
-
-			try {
-
-				String newType = Expression.dualOperandType(type1, operator, type2);
-
-				if(newType == tokenImage[ERROR] && type1 != tokenImage[ERROR] && type2 != tokenImage[ERROR])
-					throw new ParseException("Operation de type "+type1+" "+operator+" "+type2+" interdite");
-
-				else {
-					Expression.addType(newType);
-
-					if (operator == tokenImage[INF])
-						Yaka.Interpreter.iinf();
-
-					else if (operator == tokenImage[INFEGAL])
-						Yaka.Interpreter.iinfegal();
-
-					else if (operator == tokenImage[SUP])
-						Yaka.Interpreter.isup();
-
-					else if (operator == tokenImage[SUPEGAL])
-						Yaka.Interpreter.isupegal();
-
-					else if (operator == tokenImage[EGAL])
-						Yaka.Interpreter.iegal();
-
-					else if (operator == tokenImage[DIFF])
-						Yaka.Interpreter.idiff();
-
-					else
-						throw new ParseException("Operateur "+operator+" inattendu");
-				}
-			}
-			catch(ParseException e) {
-				err = true;
-				TokenMgrError error = new TokenMgrError(
-					"Erreur d'expression, ligne "+YakaTokenManager.currentLine+" :\n"+e.getMessage()+"\n",
-					TokenMgrError.LEXICAL_ERROR
-				);
-				Writer.errorln(error.getMessage());
-			}
+			Expression.dualUnstack();
 		}
 	)?
 
@@ -640,42 +574,7 @@ void simpleExpr() : {} {
 	(
 		opAdd()
 		terme() {
-
-			String type1 = Expression.popType();
-			String operator = Expression.popOperator();
-			String type2 = Expression.popType();
-
-			try {
-
-				String newType = Expression.dualOperandType(type1, operator, type2);
-
-				if(newType == tokenImage[ERROR] && type1 != tokenImage[ERROR] && type2 != tokenImage[ERROR])
-					throw new ParseException("Operation de type "+type1+" "+operator+" "+type2+" interdite");
-
-				else {
-					Expression.addType(newType);
-
-					if(operator == tokenImage[PLUS])
-						Yaka.Interpreter.iadd();
-
-					else if (operator == tokenImage[MOINS])
-						Yaka.Interpreter.isub();
-
-					else if (operator == tokenImage[OU])
-						Yaka.Interpreter.ior();
-
-					else
-						throw new ParseException("Operateur "+operator+" innatendu");
-				}
-			}
-			catch(ParseException e) {
-				err = true;
-				TokenMgrError error = new TokenMgrError(
-					"Erreur d'expression, ligne "+YakaTokenManager.currentLine+" :\n"+e.getMessage()+"\n",
-					TokenMgrError.LEXICAL_ERROR
-				);
-				Writer.errorln(error.getMessage());
-			}
+			Expression.dualUnstack();
 		}
 	)*
 
@@ -688,42 +587,7 @@ void terme() : {} {
 	(
 		opMul()
 		facteur() {
-
-			String type1 = Expression.popType();
-			String operator = Expression.popOperator();
-			String type2 = Expression.popType();
-
-			try {
-
-				String newType = Expression.dualOperandType(type1, operator, type2);
-
-				if(newType == tokenImage[ERROR] && type1 != tokenImage[ERROR] && type2 != tokenImage[ERROR])
-					throw new ParseException("Operation de type "+type1+" "+operator+" "+type2+" interdite");
-
-				else {
-					Expression.addType(newType);
-
-					if (operator == tokenImage[MUL])
-						Yaka.Interpreter.imul();
-
-					else if (operator == tokenImage[DIV])
-						Yaka.Interpreter.idiv();
-
-					else if(operator == tokenImage[ET])
-						Yaka.Interpreter.iand();
-
-					else
-						throw new ParseException("Operateur "+operator+" innatendu");
-				}
-			}
-			catch(ParseException e) {
-				err = true;
-				TokenMgrError error = new TokenMgrError(
-					"Erreur d'expression, ligne "+YakaTokenManager.currentLine+" :\n"+e.getMessage()+"\n",
-					TokenMgrError.LEXICAL_ERROR
-				);
-				Writer.errorln(error.getMessage());
-			}
+			Expression.dualUnstack();
 		}
 	)*
 
@@ -733,38 +597,7 @@ void facteur() : {} {
 
 	primaire()
 	| opNeg() primaire() {
-
-		String type = Expression.popType();
-		String operator = Expression.popOperator();
-
-		try {
-
-			String newType = Expression.singleOperandType(operator, type);
-
-			if(newType == tokenImage[ERROR] && type != tokenImage[ERROR])
-					throw new ParseException("Operation de type "+operator+" "+type+" interdite");
-
-			else {
-				Expression.addType(newType);
-
-				if(operator == tokenImage[MOINS])
-					Yaka.Interpreter.ineg();
-
-				else if(operator == tokenImage[NON])
-					Yaka.Interpreter.inot();
-
-				else
-					throw new ParseException("Operateur "+operator+" innatendu");
-			}
-		}
-		catch(ParseException e) {
-			err = true;
-			TokenMgrError error = new TokenMgrError(
-				"Erreur d'expression, ligne "+YakaTokenManager.currentLine+" :\n"+e.getMessage()+"\n",
-				TokenMgrError.LEXICAL_ERROR
-			);
-			Writer.errorln(error.getMessage());
-		}
+			Expression.singleUnstack();
 	}
 }
 
@@ -777,7 +610,7 @@ void primaire() : {} {
 
 void valeur() : {} {
 	(<entier> {
-		Expression.addType(tokenImage[ENTIER]);
+		Expression.addType(ENTIER);
 		Yaka.Interpreter.iconst(YakaTokenManager.entierLu);
 	}
 
@@ -786,11 +619,11 @@ void valeur() : {} {
 			Ident id = IdentArray.get(YakaTokenManager.identLu);
 
 			if(id == null){
-				Expression.addType(YakaConstants.tokenImage[YakaConstants.ERROR]);
+				Expression.addType(ERROR);
 				throw new ParseException("Identifiant \""+YakaTokenManager.identLu+"\" non declare");
 			}
 
-			Expression.addType(IdentArray.get(YakaTokenManager.identLu).type);
+			Expression.addType(IdentArray.get(YakaTokenManager.identLu).getType());
 
 			if(id.isVar())
 				Yaka.Interpreter.iload(id.getValue());
@@ -799,23 +632,18 @@ void valeur() : {} {
 				Yaka.Interpreter.iconst(id.getValue());
 		}
 		catch(ParseException e) {
-			err = true;
-			TokenMgrError error = new TokenMgrError(
-				"Erreur lexicale, ligne "+YakaTokenManager.currentLine+" :\n"+e.getMessage()+"\n",
-				TokenMgrError.LEXICAL_ERROR
-			);
-			Writer.errorln(error.getMessage());
+			MyError.report("Erreur lexicale", e);
 		}
 	}
 	(argumentsFonction())?)
 
 	| <VRAI> 	{
-		Expression.addType(tokenImage[BOOLEEN]);
+		Expression.addType(BOOLEEN);
 		Yaka.Interpreter.iconst(Yaka.Interpreter.TRUE);
 	}
 
 	| <FAUX> 	{
-		Expression.addType(tokenImage[BOOLEEN]);
+		Expression.addType(BOOLEEN);
 		Yaka.Interpreter.iconst(Yaka.Interpreter.FALSE);
 	})
 
@@ -824,73 +652,73 @@ void valeur() : {} {
 
 void opRel() : {} {
 	<EGAL> {
-		Expression.addOperator(tokenImage[EGAL]);
+		Expression.addOperator(EGAL);
 	}
 
 	| <DIFF> {
-		Expression.addOperator(tokenImage[DIFF]);
+		Expression.addOperator(DIFF);
 	}
 
 	| <INF>	{
-		Expression.addOperator(tokenImage[INF]);
+		Expression.addOperator(INF);
 	}
 
 	| <INFEGAL>	{
-		Expression.addOperator(tokenImage[INFEGAL]);
+		Expression.addOperator(INFEGAL);
 	}
 
 	| <SUP> {
-		Expression.addOperator(tokenImage[SUP]);
+		Expression.addOperator(SUP);
 	}
 
 	| <SUPEGAL>	{
-		Expression.addOperator(tokenImage[SUPEGAL]);
+		Expression.addOperator(SUPEGAL);
 	}
 }
 
 
 void opAdd() : {} {
 	<PLUS> {
-		Expression.addOperator(tokenImage[PLUS]);
+		Expression.addOperator(PLUS);
 	}
 
 	| <MOINS> {
-		Expression.addOperator(tokenImage[MOINS]);
+		Expression.addOperator(MOINS);
 	}
 
 	| <OU> {
-		Expression.addOperator(tokenImage[OU]);
+		Expression.addOperator(OU);
 	}
 }
 
 
 void opMul() : {} {
 	<MUL> {
-		Expression.addOperator(tokenImage[MUL]);
+		Expression.addOperator(MUL);
 	}
 
 	| <DIV> {
-		Expression.addOperator(tokenImage[DIV]);
+		Expression.addOperator(DIV);
 	}
 
 	| <ET> {
-		Expression.addOperator(tokenImage[ET]);
+		Expression.addOperator(ET);
 	}
 }
 
 
 void opNeg() : {} {
 	<MOINS> {
-		Expression.addOperator(tokenImage[MOINS]);
+		Expression.addOperator(MOINS);
 	}
 
 	| <NON> {
-		Expression.addOperator(tokenImage[NON]);
+		Expression.addOperator(NON);
 	}
 }
 
 void argumentsFonction(): {} {
-	"(" (expression() (","expression())* )? ")" 	
+	"(" (expression() (","expression())* )? ")"
 }
 
 

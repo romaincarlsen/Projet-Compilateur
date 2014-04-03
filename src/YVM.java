@@ -3,19 +3,32 @@ import java.io.OutputStream;
 
 public class YVM {
 
+	// Nom du fichier a creer par l'interpreteur
+	protected String scriptOutputFilename = "../outputs/{{FILENAME}}.yvm";
+	protected OutputStream script;
+
 	protected String header = "";
 	protected String code = "";
 	protected String footer = "";
 
-	protected OutputStream script;
 	public static final Integer TRUE = -1;
 	public static final Integer FALSE = 0;
 
 
 
 	// Création d'un nouveau fichier pour l'enregistrement de la compilation
-	public YVM(String filename) {
-		script = Writer.open(filename);
+	public YVM(String inputFilename) {
+		scriptOutputFilename = scriptOutputFilename.replace("{{FILENAME}}", inputFilename);
+
+		// Le nom du fichier de sortie est le même avec l'extension ".asm" dans le dossier "outputs"
+		script = Writer.open(scriptOutputFilename);
+	}
+
+	public YVM(String inputFilename, String outputFilename) {
+		scriptOutputFilename = outputFilename.replace("{{FILENAME}}", inputFilename);
+
+		// Le nom du fichier de sortie est le même avec l'extension ".asm" dans le dossier "outputs"
+		script = Writer.open(scriptOutputFilename);
 	}
 
 
@@ -24,121 +37,122 @@ public class YVM {
 	public void outputSave() {
 		Writer.write(script, header+code+footer);
 		Writer.close(script);
+		Writer.println("Programme de sortie : "+scriptOutputFilename+"\n");
 	}
 
 
 
 	// Instructions début/fin
 	public void entete() {
-		header += "\t"+"entete"+"\n";
+		header += "\tentete\n";
 	}
 
 	public void queue() {
-		footer += "\t"+"queue"+"\n";
+		footer += "\tqueue\n";
 	}
 
 
 
 	// Instructions arithmétiques
 	public void affect(Ident id) {
-		code += "\t"+"istore "+Integer.toString(id.getValue())+"\n";
+		code += "\tistore "+Integer.toString(id.getValue())+"\n";
 	}
 
 	public void iadd() {
-		code += "\t"+"iadd"+"\n";
+		code += "\tiadd\n";
 	}
 
 	public void isub() {
-		code += "\t"+"isub"+"\n";
+		code += "\tisub\n";
 	}
 
 	public void imul() {
-		code += "\t"+"imul"+"\n";
+		code += "\timul\n";
 	}
 
 	public void idiv() {
-		code += "\t"+"idiv"+"\n";
+		code += "\tidiv\n";
 	}
 
 	public void inot() {
-		code += "\t"+"inot"+"\n";
+		code += "\tinot\n";
 	}
 
 	public void ineg() {
-		code += "\t"+"ineg"+"\n";
+		code += "\tineg\n";
 	}
 
 	public void ior() {
-		code += "\t"+"ior"+"\n";
+		code += "\tior\n";
 	}
 
 	public void iand() {
-		code += "\t"+"iand"+"\n";
+		code += "\tiand\n";
 	}
 
 
 
 	// Instructions de comparaisons
 	public void iinf() {
-		code += "\t"+"iinf"+"\n";
+		code += "\tiinf\n";
 	}
 
 	public void isup() {
-		code += "\t"+"isup"+"\n";
+		code += "\tisup\n";
 	}
 
 	public void iinfegal() {
-		code += "\t"+"iinfegal"+"\n";
+		code += "\tiinfegal\n";
 	}
 
 	public void isupegal() {
-		code += "\t"+"isupegal"+"\n";
+		code += "\tisupegal\n";
 	}
 
 	public void iegal() {
-		code += "\t"+"iegal"+"\n";
+		code += "\tiegal\n";
 	}
 
 	public void idiff() {
-		code += "\t"+"idiff"+"\n";
+		code += "\tidiff\n";
 	}
 
 
 
 	// Instructions de stockage et de chargement
 	public void iload(int offset) {
-		code += "\t"+"iload "+Integer.toString(offset)+"\n";
+		code += "\tiload "+Integer.toString(offset)+"\n";
 	}
 
 	public void istore(int offset) {
-		code += "\t"+"istore "+Integer.toString(offset)+"\n";
+		code += "\tistore "+Integer.toString(offset)+"\n";
 	}
 
 	public void iconst(int value) {
-		code += "\t"+"iconst "+Integer.toString(value)+"\n";
+		code += "\ticonst "+Integer.toString(value)+"\n";
 	}
 
 
 
 	// Instructions de controle de flot
 	public void ifeq(String label) {
-		code += "\t"+"ifeq "+label+"\n";
+		code += "\tifeq "+label+"\n";
 	}
 
 	public void iffaux(String label) {
-		code += "\t"+"iffaux "+label+"\n";
+		code += "\tiffaux "+label+"\n";
 	}
 
 
 	public void jump(String label) {
-		code += "\t"+"goto "+label+"\n";
+		code += "\tgoto "+label+"\n";
 	}
 
 
 
 	// Instructions de pile
 	public void ouvrePrinc(int slot) {
-		code += "\t"+"ouvrePrinc "+Integer.toString(slot)+"\n";
+		code += "\touvrePrinc "+Integer.toString(slot)+"\n";
 	}
 
 
@@ -146,27 +160,49 @@ public class YVM {
 	// Insctructions d'écriture
 	public void ecrireChaine(String s) {
 		s = s.substring(1, s.length() - 1);
-		code += "\t"+"ecrireChaine \""+s+"\""+"\n";
+		code += "\tecrireChaine \""+s+"\"\n";
 	}
 
 	public void ecrireEnt() {
 		// Entier ou booléen
-		//code += "\t"+"iload "+id.getValue()+"\n";
-		code += "\t"+"ecrireEnt"+"\n";
+		//code += "\tiload "+id.getValue()+"\n";
+		code += "\tecrireEnt\n";
 	}
 
 	public void aLaLigne() {
-		code += "\t"+"aLaLigne"+"\n";
+		code += "\taLaLigne\n";
 	}
 
 
 	// Insctructions de lecture
 	public void lireEnt(Ident id) {
-		code += "\t"+"lireEnt "+id.getValue()+"\n";
+		code += "\tlireEnt "+id.getValue()+"\n";
 	}
 
 	public void label(String label) {
 		code += label + ":\n";
+	}
+
+
+	// Insctructions de fonctions
+	public void ouvreBloc (int slot){
+		code += "\touvbloc " + slot + "\n";
+	}
+
+	public void fermeBloc (int slot){
+		code += "\tfermebloc " + slot + "\n";
+	}
+
+	public void ireturn (int offset){
+		code += "\tireturn " + offset + "\n";
+	}
+
+	public void reserveRetour(){
+		code += "\treserveRetour\n";
+	}
+
+	public void call (String name){
+		code += "\tcall " + name + "\n";
 	}
 
 }

@@ -3,6 +3,9 @@ import java.util.ArrayList;
 
 public class YVMasm extends YVM {
 
+	// Nom du fichier a creer par l'interpreteur
+	private static final String asmOutputFileame = "../outputs/{{FILENAME}}.asm";
+
 	// Liste des librairies qui seront à importer
 	private ArrayList<String> libraries = new ArrayList<String>();
 
@@ -10,9 +13,10 @@ public class YVMasm extends YVM {
 	private ArrayList<String> data = new ArrayList<String>();
 
 
+
 	// Création d'un nouveau fichier pour l'enregistrement de la compilation
-	public YVMasm(String filename) {
-		super(filename);
+	public YVMasm(String inputFilename) {
+		super(inputFilename, asmOutputFileame);
 	}
 
 
@@ -41,6 +45,7 @@ public class YVMasm extends YVM {
 
 		Writer.write(script, librariesStr+header+dataStr+code+footer);
 		Writer.close(script);
+		Writer.println("Programme de sortie : "+scriptOutputFilename+"\n");
 	}
 
 
@@ -405,5 +410,33 @@ public class YVMasm extends YVM {
 		code += label + ":\n";
 	}
 
+
+	// Insctructions de fonctions
+	public void ouvreBloc (int slot){
+		code += "; ouvbloc " + slot + "\n";
+		code += "\tenter " + slot + ",0\n";
+	}
+
+	public void fermeBloc (int slot){
+		code += "; fermebloc " + slot + "\n";
+		code += "\tleave\n"
+		code += "\tret " + slot + "\n";
+	}
+
+	public void ireturn (int offset){
+		code += "; ireturn " + offset + "\n";
+		code += "\tpop ax\n";
+		code += "\tmov [bp+" + slot + "],ax\n";
+	}
+
+	public void reserveRetour(){
+		code += "; reserveRetour\n";
+		code += "\tsub sp,2\n";
+	}
+
+	public void call (String name){
+		code += "; call " + name + "\n";
+		code += "\tcall " + name + "\n";
+	}
 
 }
