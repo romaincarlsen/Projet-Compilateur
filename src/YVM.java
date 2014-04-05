@@ -203,5 +203,8 @@ public class YVM {
 	public void call (String name){
 		code += "\tcall " + name + "\n";
 	}
-
+	
+	public void main() {
+		code += "main:\n";	
+	}
 }

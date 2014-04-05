@@ -57,8 +57,6 @@ public class YVMasm extends YVM {
 		header += "\t.586\n";
 		header += "\n";
 		code += ".CODE\n";
-		code += "debut:\n";
-		code += " \tSTARTUPCODE\n";
 		code += "\n";
 	}
 
@@ -75,9 +73,10 @@ public class YVMasm extends YVM {
 	// Instructions arithmétiques
 	@Override
 	public void affect(Ident id) {
-		code += "; istore "+Integer.toString(id.getValue())+"\n";
+		code += "; istore "+id.getValue()+"\n";
 		code += "\tpop ax\n";
-		code += "\tmov word ptr [bp"+Integer.toString(id.getValue())+"], ax\n";
+		if (id.getValue()>=0) code += "\tmov word ptr [bp+"+id.getValue()+"], ax\n";
+		else code += "\tmov word ptr [bp"+id.getValue()+"], ax\n";
 		code += "\n";
 	}
 
@@ -258,7 +257,8 @@ public class YVMasm extends YVM {
 	@Override
 	public void iload(int offset) {
 		code += "; iload "+offset+"\n";
-		code += "\tpush word ptr [bp"+offset+"]\n";
+		if (offset >=0) code += "\tpush word ptr [bp+"+offset+"]\n";
+		else code += "\tpush word ptr [bp"+offset+"]\n";
 		code += "\n";
 	}
 
@@ -266,7 +266,8 @@ public class YVMasm extends YVM {
 	public void istore(int offset) {
 		code += "; istore "+offset+"\n";
 		code += "\tpop ax\n";
-		code += "\tmov word ptr [bp"+offset+"], ax\n";
+		if (offset >=0) code += "\tmov word ptr [bp+"+offset+"], ax\n";
+		else code += "\tmov word ptr [bp"+offset+"], ax\n";
 		code += "\n";
 	}
 
@@ -351,7 +352,7 @@ public class YVMasm extends YVM {
 		if(!libraries.contains(library)) {
 			libraries.add(library);
 		}
-
+		code += "; ecrireEnt\n";
 		code += "\t"+"call "+library+"\n";
 		code += "\n";
 	}
@@ -364,7 +365,7 @@ public class YVMasm extends YVM {
 			libraries.add(library);
 		}
 
-		code += "; "+"aLaLigne"+"\n";
+		code += "; aLaLigne\n";
 		code += "\t"+"call "+library+"\n";
 		code += "\n";
 	}
@@ -380,7 +381,8 @@ public class YVMasm extends YVM {
 		}
 
 		code += "; "+"lireEnt "+id.getValue()+"\n";
-		code += "\tlea dx, [bp"+id.getValue()+"]\n";
+		if (id.getValue()>=0) code += "\tlea dx, [bp+"+id.getValue()+"]\n";
+		else code += "\tlea dx, [bp"+id.getValue()+"]\n";
 		code += "\tpush dx\n";
 		code += "\t"+"call "+library+"\n";
 		code += "\n";
@@ -424,5 +426,11 @@ public class YVMasm extends YVM {
 		code += "; call " + name + "\n";
 		code += "\tcall " + name + "\n";
 	}
-
+	
+	public void main() {
+		code += "; main:\n";
+		code += "debut:\n";
+		code += " \tSTARTUPCODE\n\n";
+		code += "main:\n";
+	}
 }

@@ -32,7 +32,7 @@ Instructions pour metter à jour le dépot en ligne
 
 Bin à rajouter au PATH de l'environnement
 -------------
-<code>;C:\Program Files (x86)\Java\javacc-5.0\bin;C:\Program Files (x86)\Java\jdk1.7.0_45\bin</code>
+<code>;C:\Program Files (x86)\Java\javacc-5.0\bin</code>
 
 
 Commande à exécuter dans le Terminal (se placer dans src)

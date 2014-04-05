@@ -9,6 +9,11 @@ public class IdentArray {
 		public static HashMap<String, Ident> globaux = new HashMap<String, Ident>();
 		public static HashMap<String, Ident> locaux = new HashMap<String, Ident>();
 
+		
+		public static String currentDeclFunction = null ;
+		public static LinkedList<String> functionStack = new LinkedList<String>() ;
+		
+		
 		// Variables pour l'ajout d'un ident
 		public static String lastIdent;
 		public static Integer lastType;
@@ -16,8 +21,7 @@ public class IdentArray {
 		public static int offsetVar = 0;
 		public static int offsetParam = 2;
 
-		public static String currentNameFunction = "";
-
+		public static boolean inArguments = false ;
 
 		/**
 		 *  Récupération d'un identifiant
@@ -43,6 +47,10 @@ public class IdentArray {
 			}
 		}
 
+		public static String currentNameFunction() {
+			return functionStack.getLast() ;
+		}
+		
 		/**
 		 *  Vérifie l'existence d'un identifiant
 		 */

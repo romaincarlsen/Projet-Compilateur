@@ -12,7 +12,7 @@ options {
 }
 
 PARSER_BEGIN(Yaka)
-
+	import java.util.*;
 	public class Yaka {
 
 		// Choix de l'interpreteur a utiliser
@@ -214,7 +214,7 @@ void analyse() : {} {
 	<ident>
 	(declFonction())*
 	<PRINCIPAL>	{
-		Yaka.Interpreter.label("main");
+		Yaka.Interpreter.main();
 	}
 	bloc()
 	<FPRINCIPAL>
@@ -227,13 +227,11 @@ void analyse() : {} {
 void bloc() : {} {
 	(declConst())*
 	(declVar())* {
-		// Todo : On utilise plus jamais ouvrePrinc ?
-		//Yaka.Interpreter.ouvrePrinc(IdentArray.nbVar());
 		Yaka.Interpreter.ouvreBloc(IdentArray.nbVar());
 	}
 	suiteInstr() {
-		// Todo : IdentArray.nbParams() n'existe pas
-		//Yaka.Interpreter.fermeBloc(IdentArray.nbParams());
+		if (IdentArray.currentDeclFunction != null)
+			Yaka.Interpreter.fermeBloc(IdentArray.getGlobal(IdentArray.currentDeclFunction).nbParams());
 	}
 }
 
@@ -351,20 +349,23 @@ void declFonction() : {} {
 	type()
 	<FONCTION>
 	<ident> {
-		IdentArray.currentNameFunction = YakaTokenManager.identLu;
+		IdentArray.currentDeclFunction = YakaTokenManager.identLu ;
 		IdentArray.addGlobal(
-			IdentArray.currentNameFunction,
+			IdentArray.currentDeclFunction,
 			new IdFunction(IdentArray.lastType)
 		);
-		Yaka.Interpreter.label(IdentArray.currentNameFunction);
+		Yaka.Interpreter.label(IdentArray.currentDeclFunction);
 	}
-	paramForms()
+	paramForms() 	{
+			IdentArray.sortParams(IdentArray.currentDeclFunction);
+			}
 	bloc()
 	<FFONCTION>	{
-		IdentArray.sortParams(IdentArray.currentNameFunction);
+		
 		IdentArray.initOffsetParam();
 		IdentArray.cleanLocaux();
 		IdentArray.initOffsetVar();
+		IdentArray.currentDeclFunction = null ;
 	}
 }
 
@@ -381,7 +382,7 @@ void paramForm():{} {
 	type() <ident> {
 		IdentArray.shiftOffsetParam();
 		IdentArray.addParam(
-			IdentArray.currentNameFunction,
+			IdentArray.currentDeclFunction,
 			YakaTokenManager.identLu,
 			new IdVar(IdentArray.offsetParam, IdentArray.lastType)
 		);
@@ -403,9 +404,9 @@ void suiteInstr() : {} {
 
 
 void instruction() : {} {
-	affectation() |
 	lecture()|
 	ecriture()|
+	affectation() |
 	boucle()|
 	conditionnel()|
 	retourne()
@@ -560,8 +561,18 @@ void conditionnel() : {} {
 // variable = fonction(variable, variable, ...)
 void retourne() : {} {
 	// Todo : vérifier que le type de ce qui est retourné concorde avec le type lors de la déclaration
-	<RETOURNE> expression() {
-		Yaka.Interpreter.ireturn(IdentArray.getGlobal(IdentArray.currentNameFunction).nbParams() + 4);
+	<RETOURNE> expression() {	try {
+						int t = Expression.popType() ;
+						int t_f = IdentArray.getGlobal(IdentArray.currentDeclFunction).getType() ;
+						if (t == t_f)
+							Yaka.Interpreter.ireturn(IdentArray.getGlobal(IdentArray.currentDeclFunction).nbParams() + 4);
+						else
+							throw new ParseException("type de retour invalide : trouvé : " + tokenImage[t] + " - attendu : " + tokenImage[t_f]);
+					}
+					catch(ParseException e) {
+						MyError.report("Erreur de type", e);
+					}
+						
 	}
 }
 
@@ -637,13 +648,14 @@ void valeur() : {} {
 
 	| (<ident>  {
 		try {
-
 			// On récupère d'abord l'ident dans le bloc local
 			Ident id = IdentArray.getLocal(YakaTokenManager.identLu);
 
 			// Sinon on le récupère dans la fonction locale
 			if(id == null) {
-				id = IdentArray.getGlobal(IdentArray.currentNameFunction).getParam(YakaTokenManager.identLu);
+				Ident fct = IdentArray.getGlobal(IdentArray.currentDeclFunction) ;
+				if (fct!=null)
+					id = fct.getParam(YakaTokenManager.identLu);
 
 				// Sinon on le récupère dans le bloc global
 				if(id == null) {
@@ -651,7 +663,7 @@ void valeur() : {} {
 
 					// Si l'ident est trouvé dans le bloc global alors il devient la fonction locale courrante
 					if(id != null) {
-						IdentArray.currentNameFunction = YakaTokenManager.identLu;
+						IdentArray.functionStack.push(YakaTokenManager.identLu);
 					}
 				}
 			}
@@ -666,21 +678,21 @@ void valeur() : {} {
 
 			if(id.isVar())
 				Yaka.Interpreter.iload(id.getValue());
-
-			else if(id.isConst())
-				Yaka.Interpreter.iconst(id.getValue());
-
-			else if(id.isFunction())
-				Yaka.Interpreter.reserveRetour();
+			else {
+				if(id.isConst())
+					Yaka.Interpreter.iconst(id.getValue());
+				else {
+					if(id.isFunction())
+						Yaka.Interpreter.reserveRetour();
+				}
+			}
 
 		}
 		catch(ParseException e) {
 			MyError.report("Erreur lexicale", e);
 		}
 	}
-	(argumentsFonction())?) {
-				Yaka.Interpreter.call(IdentArray.currentNameFunction);
-				}
+	(argumentsFonction())?)
 
 	| <VRAI> 	{
 		Expression.addType(BOOLEEN);
@@ -763,5 +775,8 @@ void opNeg() : {} {
 }
 
 void argumentsFonction(): {} {
-	"(" (expression() (","expression())* )? ")"
+	"(" (expression() (","expression())* )? 	{
+							Yaka.Interpreter.call(IdentArray.functionStack.pop()) ;
+							}
+	")" 
 }
